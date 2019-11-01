@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kupanet.cashiersystem.DAO.OrderMapper" >
+  <resultMap id="BaseResultMap" type="com.kupanet.cashiersystem.model.Order" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="numbers" property="numbers" jdbcType="VARCHAR" />
+    <result column="time" property="time" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id,time,numbers
+  </sql>
+  <select id="queryById" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" ></include>
+    from order
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="queryByNumbers" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from order
+    where numbers = #{numbers,jdbcType=VARCHAR}
+  </select>
+  <select id="queryLastByNumbers" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from order
+    where id in (select (id-1) from order where numbers = #{numbers,jdbcType=VARCHAR})
+  </select>  
+  
+  <select id="countNextByNumbers" resultType="java.lang.Integer" parameterType="java.lang.String" >
+    select count(*)
+    from order
+    where id in (select (id+1) from order where numbers = #{numbers,jdbcType=VARCHAR})
+  </select>
+  
+  <select id="queryNextByNumbers" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from order
+    where id in (select (id+1) from order where numbers = #{numbers,jdbcType=VARCHAR})
+  </select> 
+</mapper>

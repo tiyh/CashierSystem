@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Error</title>
+    <link rel="stylesheet" 
+          type="text/css" 
+          th:href="@{/resources/style.css}"></link>
+  </head>
+  <body>
+	<h1>ErrorPage</h1>
+	    <div class="panel-body">
+			timestamp:
+    			<ul th:text="${timestamp}"></ul>
+    		status:
+    			<ul th:text="${status}"></ul>
+    		message:
+    			<ul th:text="${message}"></ul>
+    		path:
+    			<ul th:text="${path}"></ul>
+      </div>
+  </body>
+</html>
