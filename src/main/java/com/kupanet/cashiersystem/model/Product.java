@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
  * </p>
  *
  */
-@TableName("pms_product")
+@TableName("product")
 public class Product implements Serializable {
 
     private static final long serialVersionUID = 1L;
