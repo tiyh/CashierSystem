@@ -24,7 +24,7 @@ import java.util.List;
 //@Data
 @Getter
 @Setter
-@TableName("order")
+@TableName("order_item")
 public class Order implements Serializable {
 
 	private static final long serialVersionUID = 1L;

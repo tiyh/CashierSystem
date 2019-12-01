@@ -1,19 +1,20 @@
 package com.kupanet.cashiersystem.service.cart.impl;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.gson.Gson;
+import com.kupanet.cashiersystem.DAO.CartMapper;
 import com.kupanet.cashiersystem.model.CartItem;
 import com.kupanet.cashiersystem.model.CartPromotionItem;
 import com.kupanet.cashiersystem.model.Product;
 import com.kupanet.cashiersystem.service.cart.CartService;
 import com.kupanet.cashiersystem.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CartServiceImpl extends ServiceImpl<BaseMapper<CartItem>, CartItem> implements CartService {
+@Service
+public class CartServiceImpl extends ServiceImpl<CartMapper, CartItem> implements CartService {
     private final static String PREFIX="cart-";
     @Autowired
     private RedisUtil redisUtil;

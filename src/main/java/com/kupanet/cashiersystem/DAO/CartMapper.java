@@ -1,10 +1,10 @@
 package com.kupanet.cashiersystem.DAO;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.kupanet.cashiersystem.model.OrderOperateHistory;
+import com.kupanet.cashiersystem.model.CartItem;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface OrderOperateHistoryMapper extends BaseMapper<OrderOperateHistory> {
+public interface CartMapper  extends BaseMapper<CartItem> {
 
 }
