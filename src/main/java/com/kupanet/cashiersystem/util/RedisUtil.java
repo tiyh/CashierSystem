@@ -248,6 +248,15 @@ public class RedisUtil {
         return redisTemplate.opsForHash().delete(key,item);
     }
 
+    public long hclear(String key){
+        Set shk = redisTemplate.opsForHash().keys(key);
+        long result=0;
+        for (Object item:shk) {
+            result+=redisTemplate.opsForHash().delete(key,item);
+        }
+        return result;
+    }
+
     /**
      * 判断hash表中是否有该项的值
      * @param key 键 不能为null

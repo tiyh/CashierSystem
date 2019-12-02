@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,14 +25,10 @@ public class RedisConfig {
 
     @Bean
     public JedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration rsc=new RedisStandaloneConfiguration();
-        rsc.setHostName(host);
-        rsc.setPort(port);
-        JedisConnectionFactory factory = new JedisConnectionFactory(rsc);
-        //factory.setHostName(host);
-        //factory.setPort(port);
+        JedisConnectionFactory factory = new JedisConnectionFactory();
+        factory.setHostName(host);
+        factory.setPort(port);
         factory.setTimeout(timeout); //设置连接超时时间
-        //factory.afterPropertiesSet();
         return factory;
     }
 

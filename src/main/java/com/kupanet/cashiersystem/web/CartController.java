@@ -18,8 +18,11 @@ public class CartController {
     private final Logger logger = LoggerFactory.getLogger(CartController.class);
     @Autowired
     private CartService cartService;
+    private Long getMemberId(){
+        return Long.valueOf(1);
+    }
 
-
+/*
     @GetMapping(value = "/list")
     public Object getCartItemByPage(CartItem entity,
                                        @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -32,12 +35,13 @@ public class CartController {
         }
         return new CommonResult().failed();
     }
+*/
 
 
     @PostMapping(value = "/create")
-    public Object saveOmsCartItem(@RequestBody CartItem entity) {
+    public Object createCartItem(@RequestBody CartItem entity) {
         try {
-            if (cartService.save(entity)) {
+            if (cartService.setCart(getMemberId(),entity)) {
                 return new CommonResult().success();
             }
         } catch (Exception e) {
@@ -49,9 +53,9 @@ public class CartController {
 
 
     @PostMapping(value = "/update/{id}")
-    public Object updateOmsCartItem(@RequestBody CartItem entity) {
+    public Object updateCartItem(@RequestBody CartItem entity) {
         try {
-            if (cartService.updateById(entity)) {
+            if (cartService.setCart(getMemberId(),entity)) {
                 return new CommonResult().success();
             }
         } catch (Exception e) {
@@ -68,8 +72,21 @@ public class CartController {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("购物车表id");
             }
-            if (cartService.removeById(id)) {
+            if (cartService.delete(getMemberId(),id)){
                 return new CommonResult().success();
+            }
+        } catch (Exception e) {
+            logger.error("删除购物车表：%s", e.getMessage(), e);
+            return new CommonResult().failed();
+        }
+        return new CommonResult().failed();
+    }
+    @DeleteMapping(value = "/clear")
+    public Object clearCartItem() {
+        try {
+            int num = cartService.clear(getMemberId());
+            if (num>0){
+                return new CommonResult().success(num);
             }
         } catch (Exception e) {
             logger.error("删除购物车表：%s", e.getMessage(), e);
@@ -85,7 +102,7 @@ public class CartController {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("购物车表id");
             }
-            CartItem coupon = cartService.getById(id);
+            CartItem coupon = cartService.selectById(getMemberId(),id);
             return new CommonResult().success(coupon);
         } catch (Exception e) {
             logger.error("查询购物车表明细：%s", e.getMessage(), e);
@@ -97,8 +114,8 @@ public class CartController {
     @RequestMapping(value = "/delete/batch", method = RequestMethod.POST)
     @ResponseBody
     public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
-        boolean count = cartService.removeByIds(ids);
-        if (count) {
+        int count = cartService.delete(getMemberId(),ids);
+        if (count==ids.size()) {
             return new CommonResult().success(count);
         } else {
             return new CommonResult().failed();

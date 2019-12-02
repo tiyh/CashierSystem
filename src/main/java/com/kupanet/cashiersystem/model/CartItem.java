@@ -1,9 +1,10 @@
 package com.kupanet.cashiersystem.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class CartItem {
+public class CartItem implements Serializable {
 
     private Long id;
 
@@ -263,7 +264,7 @@ public class CartItem {
 
     @Override
     public String toString() {
-        return "OmsCartItem{" +
+        return "CartItem{" +
                 ", id=" + id +
                 ", productId=" + productId +
                 ", productSkuId=" + productSkuId +

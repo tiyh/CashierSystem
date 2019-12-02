@@ -10,7 +10,6 @@ import com.kupanet.cashiersystem.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,46 +21,19 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, CartItem> implement
         return PREFIX+String.valueOf(memberId);
     }
 
-    @Override
-    public CartItem add(Long memberId,CartItem cartItem) {
-        return add(memberId,cartItem,1);
-    }
-    @Override
-    public CartItem add(Long memberId,CartItem cartItem,int num) {
-        //login
-        //if(redisUtil.hHasKey(PREFIX+String.valueOf(memberId),String.valueOf(cartItem.getId()))){
-        redisUtil.hincr(getHKey(memberId),String.valueOf(cartItem.getId()),num);
-        return (CartItem) redisUtil.hget(getHKey(memberId),String.valueOf(cartItem.getId()));
-        //Gson gs = new Gson();
 
-        //List<CartItem> feeList = gs.fromJson(JSON字符串/JSON数组,CartItem.class);
-        //return null;
-    }
+
+    //public CartItem add(Long memberId,CartItem cartItem,int num) {
+    //    redisUtil.hincr(getHKey(memberId),String.valueOf(cartItem.getId()),num);
+    //    return (CartItem) redisUtil.hget(getHKey(memberId),String.valueOf(cartItem.getId()));
+    //}
+
 
     @Override
-    public List<CartItem> list(Long memberId, List<Long> ids) {
-        List<CartItem> lci = new ArrayList<>();
-        for(Long id:ids){
-            CartItem ci = (CartItem)redisUtil.hget(getHKey(memberId),String.valueOf(id));
-            if(ci!=null) lci.add(ci);
-        }
-        return lci;
+    public CartItem selectById(Long memberId,Long id) {
+        return (CartItem) redisUtil.hget(getHKey(memberId),String.valueOf(id));
     }
 
-    @Override
-    public CartItem selectById(Long id) {
-        return null;
-    }
-
-    @Override
-    public List<CartPromotionItem> listPromotion(Long memberId, List<Long> ids) {
-        return null;
-    }
-
-    @Override
-    public int updateQuantity(Long id, Long memberId, Integer quantity) {
-        return 0;
-    }
 
     @Override
     public int delete(Long memberId, List<Long> ids) {
@@ -73,27 +45,17 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, CartItem> implement
     }
 
     @Override
-    public Product getCartProduct(Long productId) {
-        return null;
-    }
-
-    @Override
-    public int updateAttr(CartItem cartItem) {
-        return 0;
+    public boolean delete(Long memberId, Long id) {
+        return redisUtil.hdel(getHKey(memberId),String.valueOf(id))==1;
     }
 
     @Override
     public int clear(Long memberId) {
-        return 0;
+        return (int)redisUtil.hclear(getHKey(memberId));
     }
 
     @Override
-    public List<CartPromotionItem> calcCartPromotion(List<CartItem> cartItemList) {
-        return null;
-    }
-
-    @Override
-    public CartItem addCart(CartItem cartItem) {
-        return null;
+    public boolean setCart(Long memberId,CartItem cartItem) {
+        return redisUtil.hset(getHKey(memberId),String.valueOf(cartItem.getId()),cartItem);
     }
 }
