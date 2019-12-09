@@ -22,13 +22,13 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/oms/OmsOrder")
+@RequestMapping("/order")
 public class OrderController {
-	private final Logger logger = LoggerFactory.getLogger(ProductController.class);
+	private final Logger logger = LoggerFactory.getLogger(OrderController.class);
 	@Autowired
 	private OrderService orderService;
 
-	@GetMapping(value = "/list")
+	@GetMapping(value = "/all")
 	public Object getOrderByPage(Order entity,
 								 @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
 								 @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize
@@ -40,49 +40,6 @@ public class OrderController {
 		}
 		return new CommonResult().failed();
 	}
-
-	@PostMapping(value = "/create")
-	public Object saveOrder(@RequestBody Order entity) {
-		try {
-			if (orderService.save(entity)) {
-				return new CommonResult().success();
-			}
-		} catch (Exception e) {
-			logger.error("保存订单表：%s", e.getMessage(), e);
-			return new CommonResult().failed();
-		}
-		return new CommonResult().failed();
-	}
-
-	@PostMapping(value = "/update/{id}")
-	public Object updateOmsOrder(@RequestBody Order entity) {
-		try {
-			if (orderService.updateById(entity)) {
-				return new CommonResult().success();
-			}
-		} catch (Exception e) {
-			logger.error("更新订单表：%s", e.getMessage(), e);
-			return new CommonResult().failed();
-		}
-		return new CommonResult().failed();
-	}
-
-	@DeleteMapping(value = "/delete/{id}")
-	public Object deleteOmsOrder(@PathVariable Long id) {
-		try {
-			if (id==null||id==0) {
-				return new CommonResult().paramFailed("订单表id");
-			}
-			if (orderService.removeById(id)) {
-				return new CommonResult().success();
-			}
-		} catch (Exception e) {
-			logger.error("删除订单表：%s", e.getMessage(), e);
-			return new CommonResult().failed();
-		}
-		return new CommonResult().failed();
-	}
-
 	@GetMapping(value = "/{id}")
 	public Object getOrderById( @PathVariable Long id) {
 		try {
@@ -97,9 +54,51 @@ public class OrderController {
 		}
 
 	}
+	@DeleteMapping(value = "/{id}")
+	public Object deleteOrder(@PathVariable Long id) {
+		try {
+			if (id==null||id==0) {
+				return new CommonResult().paramFailed("订单表id");
+			}
+			if (orderService.removeById(id)) {
+				return new CommonResult().success();
+			}
+		} catch (Exception e) {
+			logger.error("删除订单表：%s", e.getMessage(), e);
+			return new CommonResult().failed();
+		}
+		return new CommonResult().failed();
+	}
 
-	@RequestMapping(value = "/delete/batch", method = RequestMethod.POST)
-	@ResponseBody
+
+	@PostMapping(value = "/")
+	public Object saveOrder(@RequestBody Order entity) {
+		try {
+			if (orderService.save(entity)) {
+				return new CommonResult().success();
+			}
+		} catch (Exception e) {
+			logger.error("保存订单表：%s", e.getMessage(), e);
+			return new CommonResult().failed();
+		}
+		return new CommonResult().failed();
+	}
+
+	@PutMapping(value = "/")
+	public Object updateOrder(@RequestBody Order entity) {
+		try {
+			if (orderService.updateById(entity)) {
+				return new CommonResult().success();
+			}
+		} catch (Exception e) {
+			logger.error("更新订单表：%s", e.getMessage(), e);
+			return new CommonResult().failed();
+		}
+		return new CommonResult().failed();
+	}
+
+
+	@DeleteMapping (value = "/batch")
 	public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
 		boolean count = orderService.removeByIds(ids);
 		if (count) {
@@ -110,7 +109,7 @@ public class OrderController {
 	}
 
 
-	@RequestMapping(value = "/update/close", method = RequestMethod.POST)
+	@PutMapping(value = "/batch")
 	@ResponseBody
 	public Object close(@RequestParam("ids") List<Long> ids, @RequestParam String note) {
 		int count = orderService.close(ids, note);
@@ -122,8 +121,7 @@ public class OrderController {
 
 
 
-	@RequestMapping(value = "/update/moneyInfo", method = RequestMethod.POST)
-	@ResponseBody
+	@PutMapping (value = "/moneyInfo")
 	public Object updateReceiverInfo(@RequestBody MoneyInfoParam moneyInfoParam) {
 		int count = orderService.updateMoneyInfo(moneyInfoParam);
 		if (count > 0) {
@@ -132,7 +130,7 @@ public class OrderController {
 		return new CommonResult().failed();
 	}
 
-	@RequestMapping(value = "/update/note", method = RequestMethod.POST)
+	@PutMapping(value = "/note")
 	@ResponseBody
 	public Object updateNote(@RequestParam("id") Long id,
 							 @RequestParam("note") String note,

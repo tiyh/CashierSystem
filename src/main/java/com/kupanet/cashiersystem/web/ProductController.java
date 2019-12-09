@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -28,7 +27,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @GetMapping(value = "/list")
+    @GetMapping(value = "/all")
     public Object getPmsProductByPage(Product entity,
                                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
                                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize
@@ -42,8 +41,8 @@ public class ProductController {
     }
 
 
-    @PostMapping(value = "/create")
-    public Object savePmsProduct(@RequestBody Product productParam) {
+    @PostMapping(value = "/")
+    public Object saveProduct(@RequestBody Product productParam) {
         try {
             int count = productService.create(productParam);
             if (count > 0) {
@@ -58,7 +57,7 @@ public class ProductController {
 
     }
 
-    @PostMapping(value = "/update/{id}")
+    @PutMapping(value = "/{id}")
     public Object updatePmsProduct(@PathVariable Long id, @RequestBody Product productParam) {
         try {
             int count = productService.update(id, productParam);
@@ -74,7 +73,7 @@ public class ProductController {
 
     }
 
-    @DeleteMapping(value = "/delete/{id}")
+    @DeleteMapping(value = "/{id}")
     public Object deletePmsProduct( @PathVariable Long id) {
         try {
             if (id==null||id==0) {
@@ -105,8 +104,7 @@ public class ProductController {
 
     }
 
-    @RequestMapping(value = "/delete/batch", method = RequestMethod.POST)
-    @ResponseBody
+    @DeleteMapping(value = "/batch")
     public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
         boolean count = productService.removeByIds(ids);
         if (count) {
@@ -116,8 +114,7 @@ public class ProductController {
         }
     }
 
-    @RequestMapping(value = "/updateInfo/{id}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/info/{id}")
     public Object getUpdateInfo(@PathVariable Long id) {
         Product productResult = productService.getUpdateInfo(id);
         return new CommonResult().success(productResult);
@@ -125,8 +122,7 @@ public class ProductController {
 
 
 
-    @RequestMapping(value = "/update/publishStatus", method = RequestMethod.POST)
-    @ResponseBody
+    @PutMapping(value = "/publishStatus")
     public Object updatePublishStatus(@RequestParam("ids") List<Long> ids,
                                       @RequestParam("publishStatus") Integer publishStatus) {
         int count = productService.updatePublishStatus(ids, publishStatus);
@@ -137,8 +133,7 @@ public class ProductController {
         }
     }
 
-    @RequestMapping(value = "/update/recommendStatus", method = RequestMethod.POST)
-    @ResponseBody
+    @PutMapping(value = "/recommendStatus")
     public Object updateRecommendStatus(@RequestParam("ids") List<Long> ids,
                                         @RequestParam("recommendStatus") Integer recommendStatus) {
         int count = productService.updateRecommendStatus(ids, recommendStatus);
@@ -149,8 +144,7 @@ public class ProductController {
         }
     }
 
-    @RequestMapping(value = "/update/newStatus", method = RequestMethod.POST)
-    @ResponseBody
+    @PutMapping(value = "/newStatus")
     public Object updateNewStatus(@RequestParam("ids") List<Long> ids,
                                   @RequestParam("newStatus") Integer newStatus) {
         int count = productService.updateNewStatus(ids, newStatus);
@@ -161,7 +155,7 @@ public class ProductController {
         }
     }
 
-    @RequestMapping(value = "/update/deleteStatus", method = RequestMethod.POST)
+    @PutMapping(value = "/deleteStatus")
     @ResponseBody
     public Object updateDeleteStatus(@RequestParam("ids") List<Long> ids,
                                      @RequestParam("deleteStatus") Integer deleteStatus) {

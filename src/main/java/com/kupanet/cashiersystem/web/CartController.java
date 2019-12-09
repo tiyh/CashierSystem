@@ -22,23 +22,20 @@ public class CartController {
         return Long.valueOf(1);
     }
 
-/*
-    @GetMapping(value = "/list")
-    public Object getCartItemByPage(CartItem entity,
-                                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-                                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize
-    ) {
+    @GetMapping(value = "/all")
+    public Object listCartItem(CartItem entity) {
         try {
-            return new CommonResult().success(cartService.page(new Page<CartItem>(pageNum, pageSize), new QueryWrapper<>(entity)));
+            List<CartItem> result = cartService.list(getMemberId());
+            return new CommonResult().success(result);
         } catch (Exception e) {
-            logger.error("根据条件查询所有购物车表列表：%s", e.getMessage(), e);
+            logger.error("根据条件查询购物车表列表：%s", e.getMessage(), e);
         }
         return new CommonResult().failed();
     }
-*/
 
 
-    @PostMapping(value = "/create")
+
+    @PostMapping(value = "/")
     public Object createCartItem(@RequestBody CartItem entity) {
         try {
             if (cartService.setCart(getMemberId(),entity)) {
@@ -52,7 +49,7 @@ public class CartController {
     }
 
 
-    @PostMapping(value = "/update/{id}")
+    @PutMapping(value = "/")
     public Object updateCartItem(@RequestBody CartItem entity) {
         try {
             if (cartService.setCart(getMemberId(),entity)) {
@@ -66,8 +63,8 @@ public class CartController {
     }
 
 
-    @DeleteMapping(value = "/delete/{id}")
-    public Object deleteOmsCartItem(@PathVariable Long id) {
+    @DeleteMapping(value = "/{id}")
+    public Object deleteCartItem(@PathVariable Long id) {
         try {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("购物车表id");
@@ -81,7 +78,7 @@ public class CartController {
         }
         return new CommonResult().failed();
     }
-    @DeleteMapping(value = "/clear")
+    @DeleteMapping(value = "/all")
     public Object clearCartItem() {
         try {
             int num = cartService.clear(getMemberId());
@@ -96,8 +93,7 @@ public class CartController {
     }
 
     @GetMapping(value = "/{id}")
-    //@PreAuthorize("hasAuthority('oms:OmsCartItem:read')")
-    public Object getOmsCartItemById(@PathVariable Long id) {
+    public Object getCartItemById(@PathVariable Long id) {
         try {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("购物车表id");
@@ -111,8 +107,7 @@ public class CartController {
 
     }
 
-    @RequestMapping(value = "/delete/batch", method = RequestMethod.POST)
-    @ResponseBody
+    @DeleteMapping(value = "/batch")
     public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
         int count = cartService.delete(getMemberId(),ids);
         if (count==ids.size()) {
