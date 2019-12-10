@@ -6,10 +6,12 @@ import com.kupanet.cashiersystem.model.CartPromotionItem;
 import com.kupanet.cashiersystem.model.Product;
 
 import java.util.List;
+import java.util.Map;
 
 public interface CartService  {
 
     CartItem selectById(Long memberId,Long id);
+    Map<Object,Object> list(Long memberId);
 
     /**
      * 批量删除购物车中的商品

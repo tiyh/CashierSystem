@@ -1,19 +1,17 @@
 package com.kupanet.cashiersystem.service.cart.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.kupanet.cashiersystem.DAO.CartMapper;
 import com.kupanet.cashiersystem.model.CartItem;
-import com.kupanet.cashiersystem.model.CartPromotionItem;
-import com.kupanet.cashiersystem.model.Product;
 import com.kupanet.cashiersystem.service.cart.CartService;
 import com.kupanet.cashiersystem.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
-public class CartServiceImpl extends ServiceImpl<CartMapper, CartItem> implements CartService {
+public class CartServiceImpl  implements CartService {
     private final static String PREFIX="cart-";
     @Autowired
     private RedisUtil redisUtil;
@@ -32,6 +30,10 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, CartItem> implement
     @Override
     public CartItem selectById(Long memberId,Long id) {
         return (CartItem) redisUtil.hget(getHKey(memberId),String.valueOf(id));
+    }
+    @Override
+    public Map<Object,Object> list(Long memberId) {
+        return (Map<Object,Object> ) redisUtil.hmget(getHKey(memberId));
     }
 
 

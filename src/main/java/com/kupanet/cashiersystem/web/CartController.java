@@ -1,7 +1,5 @@
 package com.kupanet.cashiersystem.web;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kupanet.cashiersystem.model.CartItem;
 import com.kupanet.cashiersystem.service.cart.CartService;
 import com.kupanet.cashiersystem.util.CommonResult;
@@ -11,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/cart")
@@ -25,7 +24,7 @@ public class CartController {
     @GetMapping(value = "/all")
     public Object listCartItem(CartItem entity) {
         try {
-            List<CartItem> result = cartService.list(getMemberId());
+            Map<Object,Object> result = cartService.list(getMemberId());
             return new CommonResult().success(result);
         } catch (Exception e) {
             logger.error("根据条件查询购物车表列表：%s", e.getMessage(), e);
