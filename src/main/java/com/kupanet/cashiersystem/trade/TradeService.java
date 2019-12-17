@@ -9,6 +9,5 @@ public interface TradeService {
      // 当面付2.0生成支付二维码
      CommonResult tradePreCreate(Long orderId) ;
 
-    }
 }
 
