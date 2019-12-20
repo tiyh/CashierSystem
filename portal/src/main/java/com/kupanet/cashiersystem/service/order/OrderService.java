@@ -30,5 +30,6 @@ public interface OrderService extends IService<Order> {
      * 批量关闭订单
      */
     int close(List<Long> ids, String note);
+    boolean save(Order entity);
 }
 

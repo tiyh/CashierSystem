@@ -7,7 +7,7 @@ server:
 #注册到eureka客户端的名字
 spring:
   application:
-    name: feign-client
+    name: feign-id-generator
 #eureka相关实例
 eureka:
   instance:

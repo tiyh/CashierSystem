@@ -8,6 +8,7 @@ import com.kupanet.cashiersystem.DAO.OrderOperateHistoryMapper;
 import com.kupanet.cashiersystem.model.MoneyInfoParam;
 import com.kupanet.cashiersystem.model.Order;
 import com.kupanet.cashiersystem.model.OrderOperateHistory;
+import com.kupanet.cashiersystem.service.IDGeneratorService;
 import com.kupanet.cashiersystem.service.order.OrderOperateHistoryService;
 import com.kupanet.cashiersystem.service.order.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private OrderOperateHistoryMapper orderOperateHistoryMapper;
 
     private OrderOperateHistoryService orderOperateHistoryService;
+
+    @Autowired
+    private IDGeneratorService idGeneratorService;
 
     @Override
     public int close(List<Long> ids, String note) {
@@ -71,5 +75,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         history.setNote("修改备注信息：" + note);
         orderOperateHistoryMapper.insert(history);
         return count;
+    }
+    @Override
+    public boolean save(Order entity) {
+        entity.setOrderSn(idGeneratorService.getId());
+        return retBool(this.baseMapper.insert(entity));
     }
 }
