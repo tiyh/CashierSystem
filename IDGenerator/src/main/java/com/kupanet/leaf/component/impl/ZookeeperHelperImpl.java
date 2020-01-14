@@ -14,7 +14,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -38,14 +37,16 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
     private static final String PATH_FOREVER = PREFIX_ZK_PATH + "/forever";//保存所有数据持久的节点
     private String ip;
 
-    @Value("${zk.port}")
-    private String port;
-    @Value("${zk.address}")
+    //@Value("${zk.port}")
+    private String port ;
+    //@Value("${zk.address}")
     private String connectionString;
 
     private long lastUpdateTime;
     @Override
     public boolean init() {
+        this.port=System.getenv("ZK_PORT");
+        this.connectionString=System.getenv("ZK_ADDRESS");
         this.ip = NetUtils.getIp();
         this.listenAddress = ip + ":" + port;
 
@@ -57,7 +58,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                 //不存在根节点,机器第一次启动,创建/snowflake/ip:port-000000000,并上传数据
                 zk_AddressNode = createNode(curator);
                 //worker id 默认是0
-                updateLocalWorkerID(workerID);
+                //updateLocalWorkerID(workerID);
                 //定时上报本机时间给forever节点
                 ScheduledUploadData(curator, zk_AddressNode);
                 return true;
@@ -81,7 +82,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                     }
                     //准备创建临时节点
                     doService(curator);
-                    updateLocalWorkerID(workerID);
+                    //updateLocalWorkerID(workerID);
                     LOGGER.info("[Old NODE]find forever node have this endpoint ip-{} port-{} workid-{} childnode and start SUCCESS", ip, port, workerID);
                 } else {
                     //表示新启动的节点,创建持久节点 ,不用check时间
@@ -90,13 +91,13 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                     String[] nodeKey = newNode.split("-");
                     workerID = Integer.parseInt(nodeKey[1]);
                     doService(curator);
-                    updateLocalWorkerID(workerID);
+                    //updateLocalWorkerID(workerID);
                     LOGGER.info("[New NODE]can not find node on forever node that endpoint ip-{} port-{} workid-{},create own node on forever node and start SUCCESS ", ip, port, workerID);
                 }
             }
         } catch (Exception e) {
             LOGGER.error("Start node ERROR {}", e);
-            try {
+            /*try {
                 Properties properties = new Properties();
                 properties.load(new FileInputStream(new File(PROP_PATH.replace("{port}", port + ""))));
                 workerID = Integer.valueOf(properties.getProperty("workerID"));
@@ -104,7 +105,8 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
             } catch (Exception e1) {
                 LOGGER.error("Read file error ", e1);
                 return false;
-            }
+            }*/
+            return false;
         }
         return true;
     }

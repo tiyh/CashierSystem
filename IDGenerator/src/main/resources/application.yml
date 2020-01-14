@@ -1,24 +1,24 @@
-zk:
-  address: 127.0.0.1
-  port: 2181
+#zk:
+#  address: 127.0.0.1 #zk-0.zk-hs.default.svc.cluster.local
+#  port: 2181
 #配置端口
 server:
   port: 8031
 #注册到eureka客户端的名字
-spring:
-  application:
-    name: feign-id-generator
+#spring:
+#  application:
+#    name: feign-id-generator
 #eureka相关实例
-eureka:
-  instance:
-    lease-expiration-duration-in-seconds: 30
-    lease-renewal-interval-in-seconds: 10
-    #在eureka中显示ip地址
-    prefer-ip-address: true
-    ip-address: 127.0.0.1
-  client:
-    registerWithEureka: true
-    fetchRegistry: true
-    #eureka服务端的地址
-    serviceUrl:
-      defaultZone: http://localhost:8030/eureka/
+#eureka:
+#  instance:
+#    lease-expiration-duration-in-seconds: 30
+#    lease-renewal-interval-in-seconds: 10
+#    #在eureka中显示ip地址
+#    prefer-ip-address: true
+#    ip-address: 127.0.0.1
+#  client:
+#    registerWithEureka: true
+#    fetchRegistry: true
+#    #eureka服务端的地址
+#    serviceUrl:
+#      defaultZone: http://localhost:8030/eureka/

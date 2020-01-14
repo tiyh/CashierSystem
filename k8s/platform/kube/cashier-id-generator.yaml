@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: idgenerator
+    version: "1.0"
+  name: idgenerator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: idgenerator
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: idgenerator
+    spec:
+      containers:
+      - name: idgenerator
+        image: cashier-istio-idgenerator:1
+        imagePullPolicy: Never
+        env:
+          - name: ZK_ADDRESS
+            value: "zk-0.zk-hs.default.svc.cluster.local"
+          - name: ZK_PORT
+            value: "2181"
+        ports:
+        - containerPort: 8031
+        resources: {}
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: idgenerator
+  labels:
+    app: idgenerator
+spec:
+  ports:
+  - port: 8031
+    name: http
+  selector:
+    app: idgenerator
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: idgenerator
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - idgenerator-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/leaf
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        port:
+          number: 8031
+        host: idgenerator.default.svc.cluster.local
