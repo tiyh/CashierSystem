@@ -68,11 +68,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public int updateVerifyStatus(Long ids, Integer verifyStatus, String detail) {
-        return 0;
-    }
-
-    @Override
     public int updatePublishStatus(List<Long> ids, Integer publishStatus) {
         return 0;
     }
