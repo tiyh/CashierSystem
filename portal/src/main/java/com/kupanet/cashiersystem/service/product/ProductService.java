@@ -52,12 +52,7 @@ public interface ProductService extends IService<Product> {
      * 批量修改新品状态
      */
     int updateNewStatus(List<Long> ids, Integer newStatus);
-
-    /**
-     * 批量删除商品
-     */
-    int updateDeleteStatus(List<Long> ids, Integer deleteStatus);
-
+    
     /**
      * 根据商品名称或者货号模糊查询
      */

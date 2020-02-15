@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.util.Date;
 
-@TableName("order_operate_history")
+@TableName("cs_order_operate_history")
 public class OrderOperateHistory {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

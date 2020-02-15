@@ -95,14 +95,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public int updateDeleteStatus(List<Long> ids, Integer deleteStatus) {
-        Product record = new Product();
-        record.setDeleteStatus(deleteStatus);
-
-        return productMapper.update(record, new QueryWrapper<Product>().eq("id",ids));
-    }
-
-    @Override
     public List<Product> list(String keyword) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("delete_status",0);

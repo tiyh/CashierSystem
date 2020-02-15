@@ -15,21 +15,18 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * <p>
  * 订单表
- * </p>
- *
  */
 //@Data
 @Getter
 @Setter
-@TableName("order_item")
+@TableName("cs_order")
 public class Order implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	@TableField(exist = false)
-	List<OrderItem> orderItemList ;
+	List<OrderItem> orderItemList;
 	/**
 	 * 订单id
 	 */
@@ -38,9 +35,6 @@ public class Order implements Serializable {
 
 	@TableField("member_id")
 	private Long memberId;
-
-	@TableField("coupon_id")
-	private Long couponId;
 
 	/**
 	 * 订单编号
@@ -72,29 +66,6 @@ public class Order implements Serializable {
 	@TableField("pay_amount")
 	private BigDecimal payAmount;
 
-	/**
-	 * 运费金额
-	 */
-	@TableField("freight_amount")
-	private BigDecimal freightAmount;
-
-	/**
-	 * 促销优化金额（促销价、满减、阶梯价）
-	 */
-	@TableField("promotion_amount")
-	private BigDecimal promotionAmount;
-
-	/**
-	 * 积分抵扣金额
-	 */
-	@TableField("integration_amount")
-	private BigDecimal integrationAmount;
-
-	/**
-	 * 优惠券抵扣金额
-	 */
-	@TableField("coupon_amount")
-	private BigDecimal couponAmount;
 
 	/**
 	 * 管理员后台调整订单使用的折扣金额
@@ -108,56 +79,12 @@ public class Order implements Serializable {
 	@TableField("pay_type")
 	private Integer payType;
 
-	/**
-	 * 订单来源：0->PC订单；1->app订单
-	 */
-	@TableField("source_type")
-	private Integer sourceType;
 
 	/**
 	 * 订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单
 	 */
 	private Integer status;
 
-	/**
-	 * 订单类型：0->正常订单；1->秒杀订单
-	 */
-	@TableField("order_type")
-	private Integer orderType;
-
-	/**
-	 * 物流公司(配送方式)
-	 */
-	@TableField("delivery_company")
-	private String deliveryCompany;
-
-	/**
-	 * 物流单号
-	 */
-	@TableField("delivery_sn")
-	private String deliverySn;
-
-	/**
-	 * 自动确认时间（天）
-	 */
-	@TableField("auto_confirm_day")
-	private Integer autoConfirmDay;
-
-	/**
-	 * 可以获得的积分
-	 */
-	private Integer integration;
-
-	/**
-	 * 可以活动的成长值
-	 */
-	private Integer growth;
-
-	/**
-	 * 活动信息
-	 */
-	@TableField("promotion_info")
-	private String promotionInfo;
 
 	/**
 	 * 发票类型：0->不开发票；1->电子发票；2->纸质发票
@@ -178,18 +105,6 @@ public class Order implements Serializable {
 	private String billContent;
 
 	/**
-	 * 收票人电话
-	 */
-	@TableField("bill_receiver_phone")
-	private String billReceiverPhone;
-
-	/**
-	 * 收票人邮箱
-	 */
-	@TableField("bill_receiver_email")
-	private String billReceiverEmail;
-
-	/**
 	 * 收货人姓名
 	 */
 	@TableField("receiver_name")
@@ -202,57 +117,10 @@ public class Order implements Serializable {
 	private String receiverPhone;
 
 	/**
-	 * 收货人邮编
-	 */
-	@TableField("receiver_post_code")
-	private String receiverPostCode;
-
-	/**
-	 * 省份/直辖市
-	 */
-	@TableField("receiver_province")
-	private String receiverProvince;
-
-	/**
-	 * 城市
-	 */
-	@TableField("receiver_city")
-	private String receiverCity;
-
-	/**
-	 * 区
-	 */
-	@TableField("receiver_region")
-	private String receiverRegion;
-
-	/**
-	 * 详细地址
-	 */
-	@TableField("receiver_detail_address")
-	private String receiverDetailAddress;
-
-	/**
 	 * 订单备注
 	 */
 	private String note;
 
-	/**
-	 * 确认收货状态：0->未确认；1->已确认
-	 */
-	@TableField("confirm_status")
-	private Integer confirmStatus;
-
-	/**
-	 * 删除状态：0->未删除；1->已删除
-	 */
-	@TableField("delete_status")
-	private Integer deleteStatus;
-
-	/**
-	 * 下单时使用的积分
-	 */
-	@TableField("use_integration")
-	private Integer useIntegration;
 
 	/**
 	 * 支付时间
@@ -261,47 +129,9 @@ public class Order implements Serializable {
 	private Date paymentTime;
 
 	/**
-	 * 发货时间
-	 */
-	@TableField("delivery_time")
-	private Date deliveryTime;
-
-	/**
-	 * 确认收货时间
-	 */
-	@TableField("receive_time")
-	private Date receiveTime;
-
-	/**
-	 * 评价时间
-	 */
-	@TableField("comment_time")
-	private Date commentTime;
-
-	/**
 	 * 修改时间
 	 */
 	@TableField("modify_time")
 	private Date modifyTime;
-
-	@TableField("prepay_id")
-	private String prepayId;
-
-	@TableField("supply_id")
-	private Long supplyId;
-
-	@TableField("goods_id")
-	private Long goodsId;
-	@TableField("goods")
-	private List<Object> goods;
-
-	@TableField("goods_name")
-	private String goodsName;
-
-	@TableField("school_id")
-	private Long schoolId;
-
-
-
 }
 

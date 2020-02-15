@@ -28,7 +28,7 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping(value = "/all")
-    public Object getPmsProductByPage(Product entity,
+    public Object getProductByPage(Product entity,
                                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
                                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize
     ) {
@@ -58,7 +58,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{id}")
-    public Object updatePmsProduct(@PathVariable Long id, @RequestBody Product productParam) {
+    public Object updateProduct(@PathVariable Long id, @RequestBody Product productParam) {
         try {
             int count = productService.update(id, productParam);
             if (count > 0) {
@@ -74,7 +74,7 @@ public class ProductController {
     }
 
     @DeleteMapping(value = "/{id}")
-    public Object deletePmsProduct( @PathVariable Long id) {
+    public Object deleteProduct( @PathVariable Long id) {
         try {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("商品信息id");
@@ -90,7 +90,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{id}")
-    public Object getPmsProductById( @PathVariable Long id) {
+    public Object getProductById( @PathVariable Long id) {
         try {
             if (id==null||id==0) {
                 return new CommonResult().paramFailed("商品信息id");
@@ -148,18 +148,6 @@ public class ProductController {
     public Object updateNewStatus(@RequestParam("ids") List<Long> ids,
                                   @RequestParam("newStatus") Integer newStatus) {
         int count = productService.updateNewStatus(ids, newStatus);
-        if (count > 0) {
-            return new CommonResult().success(count);
-        } else {
-            return new CommonResult().failed();
-        }
-    }
-
-    @PutMapping(value = "/deleteStatus")
-    @ResponseBody
-    public Object updateDeleteStatus(@RequestParam("ids") List<Long> ids,
-                                     @RequestParam("deleteStatus") Integer deleteStatus) {
-        int count = productService.updateDeleteStatus(ids, deleteStatus);
         if (count > 0) {
             return new CommonResult().success(count);
         } else {

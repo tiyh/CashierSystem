@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 @Setter
 public class MoneyInfoParam {
     private Long orderId;
-    private BigDecimal freightAmount;
     private BigDecimal discountAmount;
     private Integer status;
 }

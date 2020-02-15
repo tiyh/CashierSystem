@@ -368,7 +368,7 @@ public class TradeServiceImpl  implements TradeService {
                 //+ (long) (Math.random() * 10000000L);
 
         // (必填) 订单标题，粗略描述用户的支付目的。如“xxx品牌xxx门店当面付扫码消费”
-        String subject = order.getGoodsName();
+        String subject = order.getMemberUsername()+":"+order.getOrderSn()+"当面付扫码消费";
                 //"xxx品牌xxx门店当面付扫码消费";
 
         // (必填) 订单总金额，单位为元，不能超过1亿元
@@ -402,7 +402,7 @@ public class TradeServiceImpl  implements TradeService {
         // 商品明细列表，需填写购买商品详细信息，
         List<GoodsDetail> goodsDetailList = new ArrayList<GoodsDetail>();
         // 创建一个商品信息，参数含义分别为商品id（使用国标）、名称、单价（单位为分）、数量，如果需要添加商品类别，详见GoodsDetail
-        GoodsDetail goods1 = GoodsDetail.newInstance(String.valueOf(order.getGoodsId()), order.getGoodsName(), 1000, 1);
+        GoodsDetail goods1 = GoodsDetail.newInstance(String.valueOf(order.getId()), order.getOrderSn(), 1000, 1);
         // 创建好一个商品后添加至商品明细列表
         goodsDetailList.add(goods1);
 
