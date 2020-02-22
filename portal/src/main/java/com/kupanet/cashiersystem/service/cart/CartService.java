@@ -1,17 +1,14 @@
 package com.kupanet.cashiersystem.service.cart;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.kupanet.cashiersystem.model.CartItem;
-import com.kupanet.cashiersystem.model.CartPromotionItem;
-import com.kupanet.cashiersystem.model.Product;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public interface CartService  {
 
     CartItem selectById(Long memberId,Long id);
-    Map<Object,Object> list(Long memberId);
+    List<Object> list(Long memberId);
 
     /**
      * 批量删除购物车中的商品
@@ -24,4 +21,11 @@ public interface CartService  {
     int clear(Long memberId);
 
     boolean setCart(Long memberId,CartItem cartItem);
+
+    boolean createCart(Long memberId,CartItem cartItem);
+
+    List<CartItem> mergeCartList(Long memberId,List<CartItem> cartList1, List<CartItem> cartList2);
+
+    List<CartItem> addGoodsToCartList(Long memberId,List<CartItem> cartList, Long productId, Integer num);
+
 }

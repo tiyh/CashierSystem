@@ -79,6 +79,23 @@ public class CartItem implements Serializable {
     private Long productCategoryId;
 
     private String productSn;
+    public CartItem(Product product){
+        setProductId(product.getId());
+        setPrice(product.getPromotionStatus()==1?product.getPromotionPrice():product.getPrice());
+        setProductPic(product.getPic());
+        setProductName(product.getName());
+        setProductSubTitle(product.getSubTitle());
+        setCreateDate(new Date());
+        setProductCategoryId(product.getProductCategoryId());
+        setProductSn(product.getProductSn());
+        //setId();
+        //private Date modifyDate;
+        //private String sp1;
+        //private String sp2;
+        //private String sp3;
+        //setProductSkuId();
+        //private String productSkuCode;
+    }
 
 
     @Override

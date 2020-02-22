@@ -164,6 +164,9 @@ public class RedisUtil {
     public Map<Object,Object> hmget(String key){
         return redisTemplate.opsForHash().entries(key);
     }
+    public List<Object> hmgetValues(String key){
+        return redisTemplate.opsForHash().values(key);
+    }
 
     /**
      * HashSet
