@@ -1,5 +1,7 @@
 package com.kupanet.cashiersystem.service.cart.impl;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kupanet.cashiersystem.model.CartItem;
 import com.kupanet.cashiersystem.model.Product;
 import com.kupanet.cashiersystem.service.IDGeneratorService;
@@ -9,6 +11,7 @@ import com.kupanet.cashiersystem.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,6 +25,8 @@ public class CartServiceImpl  implements CartService {
 
     @Autowired
     private IDGeneratorService idGeneratorService;
+    private final static ObjectMapper mapper = new ObjectMapper();
+
 
     private String getHKey(Long memberId) {
         return PREFIX + String.valueOf(memberId);
@@ -33,8 +38,13 @@ public class CartServiceImpl  implements CartService {
     }
 
     @Override
-    public List<Object> list(Long memberId) {
-         return redisUtil.hmgetValues(getHKey(memberId));
+    public List<CartItem> list(Long memberId) {
+        List<Object> cartList_object = (List<Object>) redisUtil.hmgetValues(getHKey(memberId));
+        List<CartItem> cartList_redis = new ArrayList<>();
+        for(Object object:cartList_object){
+            cartList_redis.add(mapper.convertValue(object,CartItem.class));
+        }
+         return cartList_redis;
     }
 
 
@@ -63,11 +73,6 @@ public class CartServiceImpl  implements CartService {
     }
 
     @Override
-    public boolean createCart(Long memberId, CartItem cartItem) {
-        return redisUtil.hset(getHKey(memberId), String.valueOf(cartItem.getId()), cartItem);
-    }
-
-    @Override
     public List<CartItem> mergeCartList(Long memberId, List<CartItem> cartList1, List<CartItem> cartList2) {
         for (CartItem cartItem : cartList2) {
             cartList1 = addGoodsToCartList(memberId,cartList1, cartItem.getId(), cartItem.getQuantity());
@@ -86,7 +91,7 @@ public class CartServiceImpl  implements CartService {
         CartItem cartItem = selectById(memberId,cartItemId);
         if(cartItem==null){
             cartItem = createCartItemFromProduct(memberId,product,num);
-            createCart(memberId,cartItem);
+            setCart(memberId,cartItem);
         }else{
             cartItem.setQuantity(cartItem.getQuantity()+num);
             if(cartItem.getQuantity()<=0){
@@ -95,8 +100,7 @@ public class CartServiceImpl  implements CartService {
         }
         return cartList;
     }
-
-    private CartItem createCartItemFromProduct(Long memberId,Product product,Integer num){
+    private CartItem createCartItemFromProduct(Long memberId,Product product,int num){
         if(num<=0){
             throw new RuntimeException("illegal number");
         }
@@ -106,4 +110,14 @@ public class CartServiceImpl  implements CartService {
         cartItem.setMemberId(memberId);
         return cartItem;
     }
+    @Override
+    public CartItem createCartItemFromProduct(Long memberId,Long productId,int num){
+        Product product = productService.getById(productId);
+        return createCartItemFromProduct(memberId,product,num);
+    }
+
+    private static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
+        return mapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
+    }
+
 }
