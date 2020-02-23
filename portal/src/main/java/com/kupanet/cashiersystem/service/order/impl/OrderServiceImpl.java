@@ -78,7 +78,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
     @Override
     public boolean save(Order entity) {
-        entity.setOrderSn(idGeneratorService.getId());
+        //entity.setOrderSn(idGeneratorService.getId());
+        entity.setId(Long.parseLong(idGeneratorService.getId()));
         return retBool(this.baseMapper.insert(entity));
     }
 }
