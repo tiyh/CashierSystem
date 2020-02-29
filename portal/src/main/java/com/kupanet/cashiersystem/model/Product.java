@@ -103,6 +103,10 @@ public class Product implements Serializable {
     @TableField("detail_desc")
     private String detailDesc;
 
+    public Product(){
+        
+    }
+
     @Override
     public String toString() {
         return "PmsProduct{" +

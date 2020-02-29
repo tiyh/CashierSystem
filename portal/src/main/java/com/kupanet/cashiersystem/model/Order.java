@@ -133,5 +133,8 @@ public class Order implements Serializable {
 	 */
 	@TableField("modify_time")
 	private Date modifyTime;
+	public Order(){
+
+	}
 }
 

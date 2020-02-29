@@ -93,6 +93,10 @@ public class OrderItem implements Serializable {
     @TableField("product_attr")
     private String productAttr;
 
+    public OrderItem(){
+
+    }
+
 
 
     @Override

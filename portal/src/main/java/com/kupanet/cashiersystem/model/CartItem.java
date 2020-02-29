@@ -79,6 +79,9 @@ public class CartItem implements Serializable {
     private Long productCategoryId;
 
     private String productSn;
+    public CartItem(){
+
+    }
     public CartItem(Product product){
         setProductId(product.getId());
         setPrice(product.getPromotionStatus()==1?product.getPromotionPrice():product.getPrice());
