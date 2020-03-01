@@ -4,6 +4,7 @@ package com.kupanet.cashiersystem.service.order;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kupanet.cashiersystem.model.MoneyInfoParam;
 import com.kupanet.cashiersystem.model.Order;
+import com.kupanet.cashiersystem.util.CommonResult;
 
 import java.util.List;
 
@@ -30,6 +31,8 @@ public interface OrderService extends IService<Order> {
      * 批量关闭订单
      */
     int close(List<Long> ids, String note);
-    boolean save(Order entity);
+    String createOrder(Order entity);
+    CommonResult createOrderFromCart(String cartIds, int payType, boolean all);
+
 }
 

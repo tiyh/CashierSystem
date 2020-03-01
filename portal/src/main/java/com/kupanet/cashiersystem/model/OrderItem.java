@@ -93,6 +93,13 @@ public class OrderItem implements Serializable {
     @TableField("product_attr")
     private String productAttr;
 
+
+    @TableField("promotion_amount")
+    private BigDecimal promotionAmount;
+
+    @TableField("real_amount")
+    private BigDecimal realAmount;
+
     public OrderItem(){
 
     }
@@ -101,7 +108,7 @@ public class OrderItem implements Serializable {
 
     @Override
     public String toString() {
-        return "OmsOrderItem{" +
+        return "OrderItem{" +
                 ", id=" + id +
                 ", orderId=" + orderId +
                 ", orderSn=" + orderSn +

@@ -1,7 +1,6 @@
 package com.kupanet.cashiersystem.model;
 
 
-import com.alipay.api.domain.OrderItem;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -133,6 +132,10 @@ public class Order implements Serializable {
 	 */
 	@TableField("modify_time")
 	private Date modifyTime;
+	
+	@TableField("promotion_amount")
+	private BigDecimal promotionAmount;
+
 	public Order(){
 
 	}

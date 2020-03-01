@@ -1,0 +1,7 @@
+package com.kupanet.cashiersystem.DAO;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.kupanet.cashiersystem.model.OrderItem;
+
+public interface OrderItemMapper extends BaseMapper<OrderItem> {
+}

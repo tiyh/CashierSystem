@@ -1,9 +1,10 @@
 package com.kupanet.cashiersystem.web;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kupanet.cashiersystem.model.MoneyInfoParam;
 import com.kupanet.cashiersystem.model.Order;
+import com.kupanet.cashiersystem.model.OrderItem;
+import com.kupanet.cashiersystem.service.order.OrderItemService;
 import com.kupanet.cashiersystem.service.order.OrderService;
 import com.kupanet.cashiersystem.util.CommonResult;
 import lombok.extern.slf4j.Slf4j;
@@ -22,25 +23,35 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/order")
 public class OrderController {
 	private final Logger logger = LoggerFactory.getLogger(OrderController.class);
 	@Autowired
 	private OrderService orderService;
 
-	@GetMapping(value = "/all")
-	public Object getOrderByPage(Order entity,
+	@Autowired
+	private OrderItemService orderItemService;
+
+	@GetMapping(value = "/order/all")
+	public Object getOrderByPage(Order order,
 								 @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
 								 @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize
 	) {
 		try {
-			return new CommonResult().success(orderService.page(new Page<Order>(pageNum, pageSize), new QueryWrapper<>(entity)));
-		} catch (Exception e) {
+			List<Order> orderList = orderService.list(new QueryWrapper<>(order));
+			for (Order mOrder : orderList){
+				OrderItem orderItem = new OrderItem();
+				orderItem.setOrderId(order.getId());
+				List<OrderItem> orderItemList = orderItemService.list(new QueryWrapper<>(orderItem));
+				mOrder.setOrderItemList(orderItemList);
+			}
+			return new CommonResult().success(orderList);
+		}catch (Exception e) {
 			logger.error("根据条件查询所有订单表列表：%s", e.getMessage(), e);
 		}
 		return new CommonResult().failed();
+
 	}
-	@GetMapping(value = "/{id}")
+	@GetMapping(value = "/order/{id}")
 	public Object getOrderById( @PathVariable Long id) {
 		try {
 			if (id==null||id==0) {
@@ -54,7 +65,7 @@ public class OrderController {
 		}
 
 	}
-	@DeleteMapping(value = "/{id}")
+	@DeleteMapping(value = "/order/{id}")
 	public Object deleteOrder(@PathVariable Long id) {
 		try {
 			if (id==null||id==0) {
@@ -71,20 +82,28 @@ public class OrderController {
 	}
 
 
-	@PostMapping(value = "/")
-	public Object saveOrder(@RequestBody Order entity) {
+	@PostMapping(value = "/order")
+	public Object createOrder(@RequestBody Order entity) {
 		try {
-			if (orderService.save(entity)) {
-				return new CommonResult().success();
-			}
+			String orderId = orderService.createOrder(entity);
+			return new CommonResult().success(orderId);
 		} catch (Exception e) {
 			logger.error("保存订单表：%s", e.getMessage(), e);
-			return new CommonResult().failed();
+		}
+		return new CommonResult().failed();
+	}
+	@PostMapping(value = "/order/cart")
+	public Object createOrderFromCart(@RequestParam String cartIds,@RequestParam int payType,@RequestParam boolean all) {
+		try {
+			return orderService.createOrderFromCart(cartIds,payType,all);
+		} catch (Exception e) {
+			logger.error("保存订单表：%s", e.getMessage(), e);
 		}
 		return new CommonResult().failed();
 	}
 
-	@PutMapping(value = "/")
+
+	@PutMapping(value = "/order")
 	public Object updateOrder(@RequestBody Order entity) {
 		try {
 			if (orderService.updateById(entity)) {
@@ -97,8 +116,7 @@ public class OrderController {
 		return new CommonResult().failed();
 	}
 
-
-	@DeleteMapping (value = "/batch")
+	@DeleteMapping (value = "/order/batch")
 	public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
 		boolean count = orderService.removeByIds(ids);
 		if (count) {
@@ -109,7 +127,7 @@ public class OrderController {
 	}
 
 
-	@PutMapping(value = "/batch")
+	@PutMapping(value = "/order/batch")
 	@ResponseBody
 	public Object close(@RequestParam("ids") List<Long> ids, @RequestParam String note) {
 		int count = orderService.close(ids, note);
@@ -121,7 +139,7 @@ public class OrderController {
 
 
 
-	@PutMapping (value = "/moneyInfo")
+	@PutMapping (value = "/order/moneyInfo")
 	public Object updateReceiverInfo(@RequestBody MoneyInfoParam moneyInfoParam) {
 		int count = orderService.updateMoneyInfo(moneyInfoParam);
 		if (count > 0) {
@@ -130,7 +148,7 @@ public class OrderController {
 		return new CommonResult().failed();
 	}
 
-	@PutMapping(value = "/note")
+	@PutMapping(value = "/order/note")
 	@ResponseBody
 	public Object updateNote(@RequestParam("id") Long id,
 							 @RequestParam("note") String note,

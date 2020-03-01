@@ -3,19 +3,22 @@ package com.kupanet.cashiersystem.service.order.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kupanet.cashiersystem.DAO.OrderItemMapper;
 import com.kupanet.cashiersystem.DAO.OrderMapper;
 import com.kupanet.cashiersystem.DAO.OrderOperateHistoryMapper;
-import com.kupanet.cashiersystem.model.MoneyInfoParam;
-import com.kupanet.cashiersystem.model.Order;
-import com.kupanet.cashiersystem.model.OrderOperateHistory;
+import com.kupanet.cashiersystem.model.*;
 import com.kupanet.cashiersystem.service.IDGeneratorService;
+import com.kupanet.cashiersystem.service.cart.CartService;
+import com.kupanet.cashiersystem.service.order.OrderItemService;
 import com.kupanet.cashiersystem.service.order.OrderOperateHistoryService;
 import com.kupanet.cashiersystem.service.order.OrderService;
+import com.kupanet.cashiersystem.service.product.ProductService;
+import com.kupanet.cashiersystem.util.CommonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,10 +35,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private OrderOperateHistoryMapper orderOperateHistoryMapper;
 
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+
+    @Autowired
     private OrderOperateHistoryService orderOperateHistoryService;
 
     @Autowired
     private IDGeneratorService idGeneratorService;
+
+    @Autowired
+    private OrderItemService orderItemService;
+
+    @Autowired
+    private CartService cartService;
+
+    @Autowired
+    private ProductService productService;
+
+    private Long getMemberId(){
+        return 1L;
+    }
+
 
     @Override
     public int close(List<Long> ids, String note) {
@@ -77,9 +98,143 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return count;
     }
     @Override
-    public boolean save(Order entity) {
-        //entity.setOrderSn(idGeneratorService.getId());
-        entity.setId(Long.parseLong(idGeneratorService.getId()));
-        return retBool(this.baseMapper.insert(entity));
+    public String createOrder(Order order) {
+        String orderSn = idGeneratorService.getId();
+        Long orderId =  Long.parseLong(orderSn);
+        order.setOrderSn(orderSn);
+        order.setId(orderId);
+        order.setCreateTime(new Date());
+        //向订单明细表插入数据。
+        List<OrderItem> orderItems = order.getOrderItemList();
+        for (OrderItem orderItem : orderItems) {
+            orderItem.setId(Long.parseLong(idGeneratorService.getId()));
+            orderItem.setOrderId(orderId);
+            orderItemMapper.insert(orderItem);
+        }
+        save(order);
+        return orderSn;
     }
+    public CommonResult createOrderFromCart(String cartIds,int payType,boolean all) {
+        String orderSn = idGeneratorService.getId();
+        Long orderId =  Long.parseLong(orderSn);
+        List<CartItem> cartItemList =new ArrayList<>();
+        if (all){
+            cartItemList = cartService.list(getMemberId());
+        } else{
+            String[] ids =cartIds.split(",");
+            List<Long> resultList = new ArrayList<>(ids.length);
+            for (String s : ids) {
+                resultList.add(Long.valueOf(s));
+            }
+            cartItemList = cartService.listPartCart(getMemberId(),resultList);
+        }
+
+        if (!isPublished(cartItemList)) {
+            return new CommonResult().failed("contains not published product");
+        }
+
+        List<OrderItem> orderItemList = new ArrayList<>();
+        for (CartItem cartItem : cartItemList) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductAttr(cartItem.getProductAttr());
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setProductName(cartItem.getProductName());
+            orderItem.setProductPic(cartItem.getProductPic());
+            orderItem.setProductSn(cartItem.getProductSn());
+            orderItem.setProductPrice(cartItem.getPrice());
+            orderItem.setProductQuantity(cartItem.getQuantity());
+            orderItem.setProductSkuId(cartItem.getProductSkuId());
+            orderItem.setProductSkuCode(cartItem.getProductSkuCode());
+            orderItem.setProductCategoryId(cartItem.getProductCategoryId());
+            orderItemList.add(orderItem);
+        }
+
+        //计算order_item的实付金额
+        handleRealAmount(orderItemList);
+        Order order = new Order();
+        order.setDiscountAmount(new BigDecimal(0));
+        order.setTotalAmount(calcTotalAmount(orderItemList));
+        order.setPromotionAmount(calcPromotionAmount(orderItemList));
+        order.setPayAmount(calcPayAmount(order));
+        //转化为订单信息并插入数据库
+        order.setMemberId(getMemberId());
+        order.setCreateTime(new Date());
+        order.setMemberUsername(String.valueOf(getMemberId()));
+        order.setPayType(payType);
+        //订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单
+        order.setStatus(0);
+        //TODO
+        //MemberReceiveAddress address = addressService.getById(orderParam.getAddressId());
+        //order.setReceiverName(address.getName());
+        //order.setReceiverPhone(address.getPhoneNumber());
+        //order.setDeleteStatus(0);
+
+        order.setOrderSn(orderSn);
+        save(order);
+        for (OrderItem orderItem : orderItemList) {
+            orderItem.setOrderId(order.getId());
+            orderItem.setOrderSn(order.getOrderSn());
+        }
+        orderItemService.saveBatch(orderItemList);
+
+        //删除购物车中的下单商品
+        deleteCartItemList(cartItemList, getMemberId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("order", order);
+        result.put("orderItemList", orderItemList);
+        return new CommonResult().success(result);
+    }
+    private boolean isPublished(List<CartItem> orderItems){
+        for(CartItem cartItem:orderItems){
+            if(productService.getById(cartItem.getProductId()).getPublishStatus()==0) return false;
+        }
+        return true;
+    }
+    private void handleRealAmount(List<OrderItem> orderItemList) {
+        for (OrderItem orderItem : orderItemList) {
+            BigDecimal realAmount = orderItem.getProductPrice()
+                    .subtract(orderItem.getPromotionAmount());
+            orderItem.setRealAmount(realAmount);
+        }
+    }
+    /**
+     * 计算总金额
+     */
+    private BigDecimal calcTotalAmount(List<OrderItem> orderItemList) {
+        BigDecimal totalAmount = new BigDecimal("0");
+        for (OrderItem item : orderItemList) {
+            totalAmount = totalAmount.add(item.getProductPrice().multiply(new BigDecimal(item.getProductQuantity())));
+        }
+        return totalAmount;
+    }
+    /**
+     * 计算订单优惠
+     */
+    private BigDecimal calcPromotionAmount(List<OrderItem> orderItemList) {
+        BigDecimal promotionAmount = new BigDecimal(0);
+        for (OrderItem orderItem : orderItemList) {
+            if (orderItem.getPromotionAmount() != null) {
+                promotionAmount = promotionAmount.add(orderItem.getPromotionAmount().multiply(new BigDecimal(orderItem.getProductQuantity())));
+            }
+        }
+        return promotionAmount;
+    }
+    /**
+     * 计算订单应付金额
+     */
+    private BigDecimal calcPayAmount(Order order) {
+        //总金额-促销优惠
+        BigDecimal payAmount = order.getTotalAmount()
+                .subtract(order.getPromotionAmount());
+        return payAmount;
+    }
+
+    private void deleteCartItemList(List<CartItem> cartPromotionItemList, Long memberId) {
+        List<Long> ids = new ArrayList<>();
+        for (CartItem cartPromotionItem : cartPromotionItemList) {
+            ids.add(cartPromotionItem.getId());
+        }
+        cartService.delete(memberId, ids);
+    }
+
 }
