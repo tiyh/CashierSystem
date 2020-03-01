@@ -79,6 +79,9 @@ public class CartItem implements Serializable {
     private Long productCategoryId;
 
     private String productSn;
+
+    private String productAttr;
+
     public CartItem(){
 
     }

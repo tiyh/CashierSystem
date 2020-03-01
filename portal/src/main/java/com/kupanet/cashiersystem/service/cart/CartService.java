@@ -27,5 +27,5 @@ public interface CartService  {
 
     List<CartItem> addGoodsToCartList(Long memberId,List<CartItem> cartList, Long productId, Integer num);
     CartItem createCartItemFromProduct(Long memberId, Long productId, int num);
-
-    }
+    List<CartItem> listPartCart(Long memberId, List<Long> ids);
+}

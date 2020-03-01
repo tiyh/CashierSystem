@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class CartServiceImpl  implements CartService {
@@ -44,7 +45,7 @@ public class CartServiceImpl  implements CartService {
         for(Object object:cartList_object){
             cartList_redis.add(mapper.convertValue(object,CartItem.class));
         }
-         return cartList_redis;
+        return cartList_redis;
     }
 
 
@@ -79,13 +80,14 @@ public class CartServiceImpl  implements CartService {
         }
         return cartList1;
     }
+    //TODO addGoodsToCartList String productAttr
 
     public List<CartItem> addGoodsToCartList(Long memberId,List<CartItem> cartList, Long cartItemId, Integer num) {
         Product product = productService.getById(cartItemId);
         if(product==null){
             throw new RuntimeException("product not exist");
         }
-        if(!product.getPublishStatus().equals("1")){
+        if(product.getPublishStatus()==0){
             throw new RuntimeException("product PublishStatus error");
         }
         CartItem cartItem = selectById(memberId,cartItemId);
@@ -105,6 +107,8 @@ public class CartServiceImpl  implements CartService {
             throw new RuntimeException("illegal number");
         }
         CartItem cartItem = new CartItem(product);
+        //Random rnd = new Random();
+        //cartItem.setId(rnd.nextLong());
         cartItem.setId(Long.parseLong(idGeneratorService.getId()));
         cartItem.setQuantity(num);
         cartItem.setMemberId(memberId);
@@ -119,5 +123,15 @@ public class CartServiceImpl  implements CartService {
     private static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
         return mapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
     }
+
+    @Override
+    public List<CartItem> listPartCart(Long memberId, List<Long> ids) {
+        List<CartItem> cartItemList = new ArrayList<>();
+        for(Long id:ids){
+            cartItemList.add(selectById(memberId,id));
+        }
+        return cartItemList;
+    }
+
 
 }
