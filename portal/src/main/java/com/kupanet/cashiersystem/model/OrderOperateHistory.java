@@ -92,7 +92,7 @@ public class OrderOperateHistory {
 
     @Override
     public String toString() {
-        return "OmsOrderOperateHistory{" +
+        return "OrderOperateHistory{" +
                 ", id=" + id +
                 ", orderId=" + orderId +
                 ", operateMan=" + operateMan +

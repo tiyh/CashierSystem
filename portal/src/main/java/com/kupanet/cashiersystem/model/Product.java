@@ -109,7 +109,7 @@ public class Product implements Serializable {
 
     @Override
     public String toString() {
-        return "PmsProduct{" +
+        return "Product{" +
                 ", id=" + id +
                 ", productCategoryId=" + productCategoryId +
                 ", name=" + name +
