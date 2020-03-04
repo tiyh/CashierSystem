@@ -147,3 +147,22 @@ CREATE TABLE `cs_cart_item` (
 BEGIN;
 INSERT INTO `cs_cart_item` VALUES ('136', '23', '1011', '2', '8.80','鸡蛋', '火腿', null, '127.0.0.1/images/5a9d248cN071f4959.jpg', '菜煎饼', '杂粮煎饼', '2020-02-04 10:06:43', '2020-02-05 10:06:43', '1', 'NO.1098');
 COMMIT;
+
+DROP TABLE IF EXISTS `cs_member`;
+CREATE TABLE `cs_member` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `username` varchar(64) DEFAULT NULL COMMENT '用户名',
+  `password` varchar(64) DEFAULT NULL COMMENT '密码',
+  `nickname` varchar(64) DEFAULT NULL COMMENT '昵称',
+  `phone` varchar(64) DEFAULT NULL COMMENT '手机号码',
+  `status` int(1) DEFAULT NULL COMMENT '帐号启用状态:0->禁用；1->启用',
+  `create_time` datetime DEFAULT NULL COMMENT '注册时间',
+  `password_reset_time` datetime DEFAULT NULL COMMENT '时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_username` (`username`),
+  UNIQUE KEY `idx_phone` (`phone`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COMMENT='会员表';
+
+BEGIN;
+INSERT INTO `cs_member` VALUES ('136', 'hit_15', '123456', 'chris', '13888888888','1','2020-02-04 10:06:43');
+COMMIT;
