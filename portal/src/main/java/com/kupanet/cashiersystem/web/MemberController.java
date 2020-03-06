@@ -12,10 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+@RestController
 public class MemberController {
     @Autowired
     private MemberService memberService;
-    @Value("${jwt.tokenHeader}")
+    @Value("${jwt.header}")
     private String tokenHeader;
     @Value("${jwt.tokenHead}")
     private String tokenHead;
@@ -38,7 +39,7 @@ public class MemberController {
 
     }
 
-    @RequestMapping(value = "/member/register")
+    @PostMapping(value = "/member/register")
     @ResponseBody
     public Object register(Member member) {
         if (member==null){
@@ -46,20 +47,20 @@ public class MemberController {
         }
         return memberService.register(member);
     }
-    @RequestMapping(value = "/member/getAuthCode", method = RequestMethod.GET)
+    @GetMapping(value = "/member/getAuthCode")
     @ResponseBody
     public Object getAuthCode(@RequestParam String telephone) {
         return memberService.generateAuthCode(telephone);
     }
 
-    @RequestMapping(value = "/member/updatePassword", method = RequestMethod.POST)
+    @PutMapping(value = "/member/updatePassword")
     @ResponseBody
     public Object updatePassword(@RequestParam String telephone,
                                  @RequestParam String password,
                                  @RequestParam String authCode) {
         return memberService.updatePassword(telephone, password, authCode);
     }
-    @GetMapping("/member/user")
+    @GetMapping("/member/all")
     @ResponseBody
     public Object user() {
         Member member = memberService.getCurrentMember();
@@ -70,7 +71,7 @@ public class MemberController {
 
     }
 
-    @RequestMapping(value = "/member/token/refresh", method = RequestMethod.GET)
+    @GetMapping(value = "/member/token/refresh")
     @ResponseBody
     public Object refreshToken(HttpServletRequest request) {
         String token = request.getHeader(tokenHeader);
@@ -83,8 +84,8 @@ public class MemberController {
         tokenMap.put("tokenHead", tokenHead);
         return new CommonResult().success(tokenMap);
     }
-
-    @RequestMapping(value = "/member/logout", method = RequestMethod.POST)
+    //TODO
+    @DeleteMapping(value = "/member/logout")
     @ResponseBody
     public Object logout() {
         return new CommonResult().success(null);

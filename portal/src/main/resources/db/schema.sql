@@ -21,7 +21,7 @@ CREATE TABLE `cs_order` (
   `note` varchar(500) DEFAULT NULL COMMENT '订单备注',
   `payment_time` datetime DEFAULT NULL COMMENT '支付时间',
   `modify_time` datetime DEFAULT NULL COMMENT '修改时间',
-  `promotion_amount` decimal(10,2) DEFAULT NULL COMMENT,
+  `promotion_amount` decimal(10,2) DEFAULT NULL,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8 COMMENT='订单表';
 
@@ -53,8 +53,8 @@ CREATE TABLE `cs_order_item` (
   `sp2` varchar(100) DEFAULT NULL,
   `sp3` varchar(100) DEFAULT NULL,
   `product_attr` varchar(500) DEFAULT NULL COMMENT '商品销售属性:[{"key":"颜色","value":"颜色"},{"key":"容量","value":"4G"}]',
-  `promotion_amount` decimal(10,2) DEFAULT NULL COMMENT,
-  `real_amount` decimal(10,2) DEFAULT NULL COMMENT,
+  `promotion_amount` decimal(10,2) DEFAULT NULL,
+  `real_amount` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8 COMMENT='订单中所包含的商品';
 
@@ -62,7 +62,7 @@ CREATE TABLE `cs_order_item` (
 --  Records of `cs_order_item`
 -- ----------------------------
 BEGIN;
-INSERT INTO `cs_order_item` VALUES ('1', '74', '20200229010117', '23', '127.0.0.1/images/1522738681.jpg','菜煎饼',  '6946605', '9.90', '1', '149', '101902140026004', '19', null, null, null,'规格:4','0.1','9.8');
+INSERT INTO `cs_order_item` VALUES ('1', '76', '20200229010117', '23', '127.0.0.1/images/1522738681.jpg','菜煎饼',  '6946605', '9.90', '1', '149', '101902140026004', '19', null, null, null,'规格:4','0.1','9.8');
 
 
 -- ----------------------------
@@ -164,5 +164,5 @@ CREATE TABLE `cs_member` (
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COMMENT='会员表';
 
 BEGIN;
-INSERT INTO `cs_member` VALUES ('136', 'hit_15', '123456', 'chris', '13888888888','1','2020-02-04 10:06:43');
+INSERT INTO `cs_member` VALUES ('136', 'hit_15', '123456', 'chris', '13888888888','1','2020-02-04 10:06:43','2020-02-04 10:06:43');
 COMMIT;

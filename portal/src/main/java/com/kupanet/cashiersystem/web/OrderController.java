@@ -40,7 +40,7 @@ public class OrderController {
 			List<Order> orderList = orderService.list(new QueryWrapper<>(order));
 			for (Order mOrder : orderList){
 				OrderItem orderItem = new OrderItem();
-				orderItem.setOrderId(order.getId());
+				orderItem.setOrderId(mOrder.getId());
 				List<OrderItem> orderItemList = orderItemService.list(new QueryWrapper<>(orderItem));
 				mOrder.setOrderItemList(orderItemList);
 			}
@@ -57,8 +57,12 @@ public class OrderController {
 			if (id==null||id==0) {
 				return new CommonResult().paramFailed("订单表id");
 			}
-			Order coupon = orderService.getById(id);
-			return new CommonResult().success(coupon);
+			Order mOrder = orderService.getById(id);
+			OrderItem orderItem = new OrderItem();
+			orderItem.setOrderId(mOrder.getId());
+			List<OrderItem> orderItemList = orderItemService.list(new QueryWrapper<>(orderItem));
+			mOrder.setOrderItemList(orderItemList);
+			return new CommonResult().success(mOrder);
 		} catch (Exception e) {
 			logger.error("查询订单表明细：%s", e.getMessage(), e);
 			return new CommonResult().failed();
