@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * <p>
  * 订单表
- * </p>
  *
  */
 @Slf4j
@@ -57,11 +55,7 @@ public class OrderController {
 			if (id==null||id==0) {
 				return new CommonResult().paramFailed("订单表id");
 			}
-			Order mOrder = orderService.getById(id);
-			OrderItem orderItem = new OrderItem();
-			orderItem.setOrderId(mOrder.getId());
-			List<OrderItem> orderItemList = orderItemService.list(new QueryWrapper<>(orderItem));
-			mOrder.setOrderItemList(orderItemList);
+			Order mOrder = orderService.getOrderById(id);
 			return new CommonResult().success(mOrder);
 		} catch (Exception e) {
 			logger.error("查询订单表明细：%s", e.getMessage(), e);

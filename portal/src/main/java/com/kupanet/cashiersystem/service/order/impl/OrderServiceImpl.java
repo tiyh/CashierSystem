@@ -17,6 +17,7 @@ import com.kupanet.cashiersystem.util.CommonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,6 +56,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private Long getMemberId(){
         return 1L;
+    }
+
+    @Override
+    public Order getOrderById(Long id){
+        Order mOrder = getById(id);
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrderId(mOrder.getId());
+        List<OrderItem> orderItemList = orderItemService.list(new QueryWrapper<>(orderItem));
+        mOrder.setOrderItemList(orderItemList);
+        return mOrder;
     }
 
 

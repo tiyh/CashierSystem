@@ -21,6 +21,7 @@ import com.alipay.demo.trade.service.impl.AlipayTradeServiceImpl;
 import com.alipay.demo.trade.service.impl.AlipayTradeWithHBServiceImpl;
 import com.alipay.demo.trade.utils.Utils;
 import com.kupanet.cashiersystem.model.Order;
+import com.kupanet.cashiersystem.model.OrderItem;
 import com.kupanet.cashiersystem.service.order.OrderService;
 import com.kupanet.cashiersystem.trade.HbRunner;
 import com.kupanet.cashiersystem.trade.TradeService;
@@ -29,14 +30,29 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 @Service
+@PropertySource({"classpath:zfbinfo.properties"})
 public class TradeServiceImpl  implements TradeService {
     private static Log log = LogFactory.getLog(com.kupanet.cashiersystem.trade.TradeService.class);
+
+    @Value("${appid}")
+    private String appid;
+    @Value("${pid}")
+    private String pid;
+
+    @Value("${notify_url}")
+    private String notifyUrl;
+
+    @Value("${timeout_express}")
+    private String timeoutExpress;
+
 
     @Autowired
     private OrderService orderService;
@@ -218,9 +234,6 @@ public class TradeServiceImpl  implements TradeService {
         ExtendParams extendParams = new ExtendParams();
         extendParams.setSysServiceProviderId(providerId);
 
-        // 支付超时，线下扫码交易定义为5分钟
-        String timeoutExpress = "5m";
-
         // 商品明细列表，需填写购买商品详细信息，
         List<GoodsDetail> goodsDetailList = new ArrayList<GoodsDetail>();
         // 创建一个商品信息，参数含义分别为商品id（使用国标）、名称、单价（单位为分）、数量，如果需要添加商品类别，详见GoodsDetail
@@ -267,8 +280,12 @@ public class TradeServiceImpl  implements TradeService {
     // 当面付2.0查询
     @Override
     @Transactional
-    public CommonResult tradeQuery(String outTradeNo) {
+    public CommonResult tradeQuery(Long orderId) {
+        String outTradeNo = String.valueOf(orderId);
         // 创建查询请求builder，设置请求参数
+        Order order = orderService.getById(orderId);
+        if(order==null||order.getOrderSn()==null||order.getOrderSn().isEmpty())
+            return new CommonResult().failed("订单异常!!!");
         AlipayTradeQueryRequestBuilder builder = new AlipayTradeQueryRequestBuilder()
                 .setOutTradeNo(outTradeNo);
 
@@ -286,6 +303,8 @@ public class TradeServiceImpl  implements TradeService {
                         log.info(bill.getFundChannel() + ":" + bill.getAmount());
                     }
                 }
+                order.setStatus(1);
+                orderService.updateById(order);
                 return new CommonResult().success(response);
 
             case FAILED:
@@ -302,22 +321,16 @@ public class TradeServiceImpl  implements TradeService {
         }
     }
 
-    // 测试当面付2.0退款
+    // 当面付2.0退款
     @Override
     @Transactional
-    public CommonResult tradeRefund(Long id,String refundReason) {
+    public CommonResult tradeRefund(Long id,String storeId,String refundReason) {
         // (必填) 外部订单号，需要退款交易的商户外部订单号
         Order order = orderService.getById(id);
         if(order==null) return new CommonResult().failed("订单未知!!!");
         int status = order.getStatus();
-        if(status==0){
-            return new CommonResult().failed("!!!");
-        }
-        if(status==4){
-            return new CommonResult().failed("!!!");
-        }
-        if(status==5){
-            return new CommonResult().failed("!!!");
+        if(status!=0){
+            return new CommonResult().failed(String.valueOf(status));
         }
         String outTradeNo = order.getOrderSn();
 
@@ -328,21 +341,18 @@ public class TradeServiceImpl  implements TradeService {
         // 对于相同支付宝交易号下多笔相同商户退款请求号的退款交易，支付宝只会进行一次退款
         String outRequestNo = "";
 
-        // (必填) 退款原因，可以说明用户退款原因，方便为商家后台提供统计
-        //String refundReason = "正常退款，用户买多了";
-
-        // (必填) 商户门店编号，退款情况下可以为商家后台提供退款权限判定和统计等作用，详询支付宝技术支持
-        String storeId = "test_store_id";
-
         // 创建退款请求builder，设置请求参数
         AlipayTradeRefundRequestBuilder builder = new AlipayTradeRefundRequestBuilder()
                 .setOutTradeNo(outTradeNo).setRefundAmount(refundAmount).setRefundReason(refundReason)
-                .setOutRequestNo(outRequestNo).setStoreId(storeId);
+                .setOutRequestNo(outRequestNo).setStoreId(storeId)                .setNotifyUrl(notifyUrl)//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
+                .setNotifyUrl(notifyUrl);
 
         AlipayF2FRefundResult result = tradeService.tradeRefund(builder);
         switch (result.getTradeStatus()) {
             case SUCCESS:
                 log.info("支付宝退款成功: )");
+                order.setStatus(2);
+                orderService.updateById(order);
                 return new CommonResult().success(result);
             case FAILED:
                 log.error("支付宝退款失败!!!");
@@ -356,24 +366,23 @@ public class TradeServiceImpl  implements TradeService {
         }
     }
 
-    // 测试当面付2.0生成支付二维码
-    public CommonResult tradePreCreate(Long orderId) {
+    // 当面付2.0生成支付二维码
+    public CommonResult tradePreCreate(Long orderId,String operatorId,String storeId) {
         // (必填) 商户网站订单系统中唯一订单号，64个字符以内，只能包含字母、数字、下划线，
-        // 需保证商户系统端不能重复，建议通过数据库sequence生成，
-        Order order = orderService.getById(orderId);
+        Order order = orderService.getOrderById(orderId);
+        List<OrderItem> orderItems = order.getOrderItemList();
         if(order==null||order.getOrderSn()==null||order.getOrderSn().isEmpty())
             return new CommonResult().failed("订单异常!!!");
-        String outTradeNo = order.getOrderSn();
-                //"tradeprecreate" + System.currentTimeMillis()
-                //+ (long) (Math.random() * 10000000L);
+        if(orderItems==null&&orderItems.isEmpty())
+            return new CommonResult().failed("订单商品明细异常!!!");
 
+        String outTradeNo = order.getOrderSn();
         // (必填) 订单标题，粗略描述用户的支付目的。如“xxx品牌xxx门店当面付扫码消费”
         String subject = order.getMemberUsername()+":"+order.getOrderSn()+"当面付扫码消费";
-                //"xxx品牌xxx门店当面付扫码消费";
 
         // (必填) 订单总金额，单位为元，不能超过1亿元
         // 如果同时传入了【打折金额】,【不可打折金额】,【订单总金额】三者,则必须满足如下条件:【订单总金额】=【打折金额】+【不可打折金额】
-        String totalAmount = order.getTotalAmount().toPlainString();
+        String totalAmount = order.getPayAmount().toPlainString();
 
         // (可选) 订单不可打折金额，可以配合商家平台配置折扣活动，如果酒水不参与打折，则将对应金额填写至此字段
         // 如果该值未传入,但传入了【订单总金额】,【打折金额】,则该值默认为【订单总金额】-【打折金额】
@@ -383,29 +392,19 @@ public class TradeServiceImpl  implements TradeService {
         // 如果该字段为空，则默认为与支付宝签约的商户的PID，也就是appid对应的PID
         String sellerId = "";
 
-        // 订单描述，可以对交易或商品进行一个详细地描述，比如填写"购买商品2件共15.00元"
-        String body = "购买商品3件共20.00元";
-
-        // 商户操作员编号，添加此参数可以为商户操作员做销售统计
-        String operatorId = "test_operator_id";
-
-        // (必填) 商户门店编号，通过门店号和商家后台可以配置精准到门店的折扣信息，详询支付宝技术支持
-        String storeId = "test_store_id";
-
         // 业务扩展参数，目前可添加由支付宝分配的系统商编号(通过setSysServiceProviderId方法)，详情请咨询支付宝技术支持
         ExtendParams extendParams = new ExtendParams();
-        extendParams.setSysServiceProviderId("2088100200300400500");
-
-        // 支付超时，定义为120分钟
-        String timeoutExpress = "120m";
+        extendParams.setSysServiceProviderId(pid);
 
         // 商品明细列表，需填写购买商品详细信息，
         List<GoodsDetail> goodsDetailList = new ArrayList<GoodsDetail>();
         // 创建一个商品信息，参数含义分别为商品id（使用国标）、名称、单价（单位为分）、数量，如果需要添加商品类别，详见GoodsDetail
-        GoodsDetail goods1 = GoodsDetail.newInstance(String.valueOf(order.getId()), order.getOrderSn(), 1000, 1);
-        // 创建好一个商品后添加至商品明细列表
-        goodsDetailList.add(goods1);
-
+        // 订单描述，可以对交易或商品进行一个详细地描述，比如填写"购买商品2件共15.00元"
+        String body = "购买商品"+orderItems.size()+"件共"+totalAmount+"元";
+        for(OrderItem oi:orderItems){
+            GoodsDetail goods1 = GoodsDetail.newInstance(String.valueOf(order.getId()), order.getOrderSn(), 1000, 1);
+            goodsDetailList.add(goods1);
+        }
 
         // 创建扫码支付请求builder，设置请求参数
         AlipayTradePrecreateRequestBuilder builder = new AlipayTradePrecreateRequestBuilder()
@@ -413,7 +412,7 @@ public class TradeServiceImpl  implements TradeService {
                 .setUndiscountableAmount(undiscountableAmount).setSellerId(sellerId).setBody(body)
                 .setOperatorId(operatorId).setStoreId(storeId).setExtendParams(extendParams)
                 .setTimeoutExpress(timeoutExpress)
-                //                .setNotifyUrl("http://www.test-notify-url.com")//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
+                .setNotifyUrl(notifyUrl)//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
                 .setGoodsDetailList(goodsDetailList);
 
         AlipayF2FPrecreateResult result = tradeService.tradePrecreate(builder);
@@ -422,11 +421,7 @@ public class TradeServiceImpl  implements TradeService {
                 log.info("支付宝预下单成功: )");
                 AlipayTradePrecreateResponse response = result.getResponse();
                 dumpResponse(response);
-                // 需要修改为运行机器上的路径
-                //String filePath = String.format("/Users/sudo/Desktop/qr-%s.png",
-                //log.info("filePath:" + filePath);
-                //ZxingUtils.getQRCodeImge(response.getQrCode(), 256, filePath);
-                log.info("test_trade_precreate success,OutTradeNo:"+response.getOutTradeNo()+",QR:"+response.getQrCode());
+                log.info("trade_precreate success,OutTradeNo:"+response.getOutTradeNo()+",QR:"+response.getQrCode());
                 return new CommonResult().success(response.getQrCode());
             case FAILED:
                 log.error("支付宝预下单失败!!!");
