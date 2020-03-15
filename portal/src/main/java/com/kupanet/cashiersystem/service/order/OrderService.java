@@ -32,7 +32,7 @@ public interface OrderService extends IService<Order> {
      */
     int close(List<Long> ids, String note);
     String createOrder(Order entity);
-    CommonResult createOrderFromCart(String cartIds, int payType, boolean all);
+    CommonResult createOrderFromCart(String cartIds, int payType, String notifyUrl,boolean all);
     Order getOrderById(Long id);
 }
 

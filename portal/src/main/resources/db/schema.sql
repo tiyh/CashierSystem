@@ -22,6 +22,7 @@ CREATE TABLE `cs_order` (
   `payment_time` datetime DEFAULT NULL COMMENT '支付时间',
   `modify_time` datetime DEFAULT NULL COMMENT '修改时间',
   `promotion_amount` decimal(10,2) DEFAULT NULL,
+  `notify_url` varchar(512) DEFAULT NULL,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8 COMMENT='订单表';
 
@@ -29,7 +30,7 @@ CREATE TABLE `cs_order` (
 --  Records of `cs_order`
 -- ----------------------------
 BEGIN;
-INSERT INTO `cs_order` VALUES('76','17','20200229010117', '2020-02-19 22:54:34','chris', '9.90','9.90', '0.00', '1', '0','0',null, null,'123', '13888888888', null,  null, null,'0.1');
+INSERT INTO `cs_order` VALUES('76','17','20200229010117', '2020-02-19 22:54:34','chris', '9.90','9.90', '0.00', '1', '0','0',null, null,'123', '13888888888', null,  null, null,'0.1',"http://127.0.0.1:8087/notify");
 COMMIT;
 
 -- ----------------------------

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kupanet.cashiersystem.DAO.OrderItemMapper;
 import com.kupanet.cashiersystem.DAO.OrderMapper;
 import com.kupanet.cashiersystem.DAO.OrderOperateHistoryMapper;
+import com.kupanet.cashiersystem.constant.PayConstant;
 import com.kupanet.cashiersystem.model.*;
 import com.kupanet.cashiersystem.service.IDGeneratorService;
 import com.kupanet.cashiersystem.service.cart.CartService;
@@ -72,7 +73,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public int close(List<Long> ids, String note) {
         Order record = new Order();
-        record.setStatus(4);
+        record.setStatus(PayConstant.PayStatus.FAILED.getInt());
         int count = orderMapper.update(record, new QueryWrapper<Order>().eq("delete_status",0).in("id",ids));
         List<OrderOperateHistory> historyList = ids.stream().map(orderId -> {
             OrderOperateHistory history = new OrderOperateHistory();
@@ -98,6 +99,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setId(id);
         order.setNote(note);
         order.setModifyTime(new Date());
+        order.setStatus(status);
         int count = orderMapper.updateById(order);
         OrderOperateHistory history = new OrderOperateHistory();
         history.setOrderId(id);
@@ -125,7 +127,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         save(order);
         return orderSn;
     }
-    public CommonResult createOrderFromCart(String cartIds,int payType,boolean all) {
+    public CommonResult createOrderFromCart(String cartIds,int payType,String notifyUrl,boolean all) {
         String orderSn = idGeneratorService.getId();
         Long orderId =  Long.parseLong(orderSn);
         List<CartItem> cartItemList =new ArrayList<>();
@@ -172,8 +174,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setCreateTime(new Date());
         order.setMemberUsername(String.valueOf(getMemberId()));
         order.setPayType(payType);
-        //订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单
-        order.setStatus(0);
+        order.setStatus(PayConstant.PayStatus.INIT.getInt());
+        order.setNotifyUrl(notifyUrl);
         //TODO
         //MemberReceiveAddress address = addressService.getById(orderParam.getAddressId());
         //order.setReceiverName(address.getName());

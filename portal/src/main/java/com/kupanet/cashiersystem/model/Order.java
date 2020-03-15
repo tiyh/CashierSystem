@@ -80,7 +80,7 @@ public class Order implements Serializable {
 
 
 	/**
-	 * 订单状态：0->待付款；1->已完成；2->已关闭；3->无效订单
+	 * 订单状态： -1->支付失败,0->初始态,1->支付成功,2->业务完成
 	 */
 	private Integer status;
 
@@ -135,6 +135,9 @@ public class Order implements Serializable {
 	
 	@TableField("promotion_amount")
 	private BigDecimal promotionAmount;
+
+	@TableField("notify_url")
+	private String notifyUrl;
 
 	public Order(){
 

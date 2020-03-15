@@ -91,9 +91,9 @@ public class OrderController {
 		return new CommonResult().failed();
 	}
 	@PostMapping(value = "/order/cart")
-	public Object createOrderFromCart(@RequestParam String cartIds,@RequestParam int payType,@RequestParam boolean all) {
+	public Object createOrderFromCart(String cartIds, int payType, String notifyUrl, boolean all) {
 		try {
-			return orderService.createOrderFromCart(cartIds,payType,all);
+			return orderService.createOrderFromCart(cartIds,payType,notifyUrl,all);
 		} catch (Exception e) {
 			logger.error("保存订单表：%s", e.getMessage(), e);
 		}

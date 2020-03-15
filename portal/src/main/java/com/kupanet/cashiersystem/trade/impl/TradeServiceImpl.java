@@ -20,6 +20,7 @@ import com.alipay.demo.trade.service.impl.AlipayMonitorServiceImpl;
 import com.alipay.demo.trade.service.impl.AlipayTradeServiceImpl;
 import com.alipay.demo.trade.service.impl.AlipayTradeWithHBServiceImpl;
 import com.alipay.demo.trade.utils.Utils;
+import com.kupanet.cashiersystem.constant.PayConstant;
 import com.kupanet.cashiersystem.model.Order;
 import com.kupanet.cashiersystem.model.OrderItem;
 import com.kupanet.cashiersystem.service.order.OrderService;
@@ -303,7 +304,7 @@ public class TradeServiceImpl  implements TradeService {
                         log.info(bill.getFundChannel() + ":" + bill.getAmount());
                     }
                 }
-                order.setStatus(1);
+                order.setStatus(PayConstant.PayStatus.SUCCESS.getInt());
                 orderService.updateById(order);
                 return new CommonResult().success(response);
 
@@ -351,7 +352,7 @@ public class TradeServiceImpl  implements TradeService {
         switch (result.getTradeStatus()) {
             case SUCCESS:
                 log.info("支付宝退款成功: )");
-                order.setStatus(2);
+                order.setStatus(PayConstant.PayStatus.FAILED.getInt());
                 orderService.updateById(order);
                 return new CommonResult().success(result);
             case FAILED:

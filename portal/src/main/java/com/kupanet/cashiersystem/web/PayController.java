@@ -1,6 +1,8 @@
 package com.kupanet.cashiersystem.web;
 
+import com.kupanet.cashiersystem.constant.PayConstant;
 import com.kupanet.cashiersystem.service.order.OrderService;
+import com.kupanet.cashiersystem.trade.NotifyPayService;
 import com.kupanet.cashiersystem.trade.TradeService;
 
 import org.slf4j.Logger;
@@ -8,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 
 @RestController
@@ -19,6 +24,8 @@ public class PayController {
     private OrderService orderService;
     @Autowired
     private TradeService tradeService;
+    @Autowired
+    private NotifyPayService notifyPayService;
 
     @GetMapping("qr")
     public Object tradePreCreate(@RequestParam Long id,String operatorId,String storeId){
@@ -37,8 +44,24 @@ public class PayController {
     @RequestMapping("notify/alipay.htm")
     @ResponseBody
     public String aliPayNotifyRes(HttpServletRequest request) {
-        //todo
-        return "";
+        Map<String,String> params = new HashMap<String,String>();
+        Map requestParams = request.getParameterMap();
+        for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext();) {
+            String name = (String) iter.next();
+            String[] values = (String[]) requestParams.get(name);
+            String valueStr = "";
+            for (int i = 0; i < values.length; i++) {
+                valueStr = (i == values.length - 1) ? valueStr + values[i]
+                        : valueStr + values[i] + ",";
+            }
+            params.put(name, valueStr);
+        }
+        LOGGER.info("通知请求数据:reqStr="+params);
+        if(params.isEmpty()) {
+            LOGGER.error("请求参数为空");
+            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+        }
+        return notifyPayService.handleAliPayNotify(params);
 
     }
 }
