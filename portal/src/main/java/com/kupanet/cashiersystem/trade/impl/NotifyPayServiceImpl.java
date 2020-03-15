@@ -7,9 +7,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kupanet.cashiersystem.constant.PayConstant;
 import com.kupanet.cashiersystem.model.Order;
+import com.kupanet.cashiersystem.model.OrderPaidEvent;
 import com.kupanet.cashiersystem.service.order.OrderService;
 import com.kupanet.cashiersystem.trade.NotifyPayService;
 import com.kupanet.cashiersystem.web.PayController;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +29,19 @@ import java.util.Set;
 @Service
 @PropertySource({"classpath:zfbinfo.properties"})
 public class NotifyPayServiceImpl implements NotifyPayService {
-    private static Logger LOGGER = LoggerFactory.getLogger(PayController.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(NotifyPayServiceImpl.class);
+
 
     @Autowired
-    private RestTemplate restTemplate;
+    private RocketMQTemplate rocketMQTemplate;
 
     @Value("${sign_type}")
     private String signType;
     @Value("${public_key}")
     private String publicKey;
+
+    @Value("${cashier.rocketmq.orderTopic}")
+    private String orderTopic;
     private final static ObjectMapper mapper = new ObjectMapper();
 
 
@@ -47,20 +54,20 @@ public class NotifyPayServiceImpl implements NotifyPayService {
             passSign = AlipaySignature.rsaCheckV1(params, publicKey, "UTF-8", signType);
         }catch (AlipayApiException e){
             LOGGER.error("check sign fail,trade_no:"+params.get("trade_no")+e);
-            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
         }
         if(!passSign){
             LOGGER.error("check sign fail,trade_no:"+params.get("trade_no"));
-            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
         }
         String trade_status = String.valueOf(params.get("trade_status"));	// 交易状态
         String trade_no = String.valueOf(params.get("trade_no"));			// 渠道订单号
-        Long orderId;
+        Long orderId=76L;
         try{
             orderId = Long.parseLong(trade_no);
         }catch (NumberFormatException e){
             LOGGER.error("trade_no:"+e);
-            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
 
         }
         Order order = orderService.getOrderById(orderId);
@@ -74,7 +81,7 @@ public class NotifyPayServiceImpl implements NotifyPayService {
             }
         }else{
             LOGGER.info("trade_status="+trade_status);
-            return PayConstant.RETURN_ALIPAY_VALUE_SUCCESS;
+            //return PayConstant.RETURN_ALIPAY_VALUE_SUCCESS;
         }
         doNotify(order);
         return PayConstant.RETURN_ALIPAY_VALUE_SUCCESS;
@@ -83,24 +90,9 @@ public class NotifyPayServiceImpl implements NotifyPayService {
 
 
     public void doNotify(Order order) {
-        String order_json="";
-        try {
-            order_json = createNotifyInfo(order);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        try {
-            doPost(order_json);
-        } catch (Exception e) {
-            LOGGER.error("payOrderId={},sendMessage error.{}", order.getId(), e);
-        }
-    }
-    public String createNotifyInfo(Order order) throws JsonProcessingException {
-        Map<String,Object> map=new HashMap<>();
-        map.put("url", createNotifyUrl(order));
-        map.put("orderId", order.getId());
-        map.put("createTime", System.currentTimeMillis());
-        return  mapper.writeValueAsString(map);
+        SendResult sendResult = rocketMQTemplate.syncSend(orderTopic, new OrderPaidEvent(order.getId(),order.getPayAmount(),
+                createNotifyUrl(order),System.currentTimeMillis()));
+        LOGGER.info("syncSend1 to topic %s sendResult=%s %n", orderTopic, sendResult);
     }
     public String createNotifyUrl(Order payOrder) {
         Map<String, Object> paramMap = new HashMap<>();
@@ -127,44 +119,5 @@ public class NotifyPayServiceImpl implements NotifyPayService {
             urlParam.append("&");
         }
         return urlParam.toString();
-    }
-
-    public void doPost(String order_json) {
-        Map<String,String> orderMap;
-        try {
-            orderMap = mapper.readValue(order_json, new TypeReference<Map<String,String>>() {});
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return;
-        }
-        String respUrl = orderMap.get("url");
-        String orderId = orderMap.get("orderId");
-        if(respUrl==null||respUrl.isEmpty()) {
-            LOGGER.error( "respUrl empty");
-            return;
-        }
-        try {
-            String notifyResult = "";
-            try {
-                URI uri = new URI(respUrl);
-                notifyResult = restTemplate.postForObject(uri, null, String.class);
-            }catch (Exception e) {
-                LOGGER.error( "notify Exception:"+e);
-            }
-            LOGGER.info("notify notifyResult:{} , OrderID={}",notifyResult, orderId);
-            if(notifyResult!=null&&notifyResult.trim().equalsIgnoreCase("success")){
-                try {
-                    orderService.updateNote(Long.parseLong(orderId),"notify success",PayConstant.PayStatus.FINISHED.getInt());
-                } catch (Exception e) {
-                    LOGGER.error("updateNote:"+e);
-                }
-            }else {
-                LOGGER.error("notify fail");
-                // TODO
-            }
-        } catch(Exception e) {
-            LOGGER.error("notify exception. url:{},e:{}", respUrl,e);
-        }
-
     }
 }
