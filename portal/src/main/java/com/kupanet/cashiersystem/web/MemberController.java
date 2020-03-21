@@ -84,10 +84,13 @@ public class MemberController {
         tokenMap.put("tokenHead", tokenHead);
         return new CommonResult().success(tokenMap);
     }
-    //TODO
+
     @DeleteMapping(value = "/member/logout")
     @ResponseBody
-    public Object logout() {
-        return new CommonResult().success(null);
+    public Object logout(HttpServletRequest request) {
+        String token = request.getHeader(tokenHeader);
+        return memberService.logout(token) ?
+                new CommonResult().success():
+                new CommonResult().failed(token);
     }
 }

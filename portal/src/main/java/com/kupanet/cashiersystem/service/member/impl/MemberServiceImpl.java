@@ -43,8 +43,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
     @Autowired
     private RedisUtil redisUtil;
     private static final Logger LOGGER = LoggerFactory.getLogger(MemberServiceImpl.class);
-    /* @Resource
-     private AuthenticationManager authenticationManager;*/
+
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -143,8 +142,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
         try {
             SecurityContext ctx = SecurityContextHolder.getContext();
             Authentication auth = ctx.getAuthentication();
-            Member member = (Member) auth.getPrincipal();
-            return member;
+            return (Member) auth.getPrincipal();
         }catch (Exception e){
             return new Member();
         }
@@ -164,7 +162,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
     public Map<String, Object> login(String username, String password) {
         Map<String, Object> tokenMap = new HashMap<>();
         String token = null;
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, passwordEncoder.encode(password));
+        //UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, passwordEncoder.encode(password));
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if(!passwordEncoder.matches(password,userDetails.getPassword())){
@@ -176,6 +174,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
                     userDetails,null,userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             token = jwtTokenUtil.generateToken(userDetails);
+            redisUtil.set(token, member);
             tokenMap.put("userInfo",member);
         } catch (AuthenticationException e) {
             LOGGER.warn("登录异常:{}", e.getMessage());
@@ -194,6 +193,14 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
             return jwtTokenUtil.refreshToken(token);
         }
         return null;
+    }
+
+    public boolean logout(String oldToken) {
+        if(oldToken!=null){
+            final String token = oldToken.substring(tokenHead.length());
+            return redisUtil.del(token);
+        }
+        return false;
     }
 
 }

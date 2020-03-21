@@ -2,8 +2,6 @@ package com.kupanet.cashiersystem.trade.impl;
 
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kupanet.cashiersystem.constant.PayConstant;
 import com.kupanet.cashiersystem.model.Order;
@@ -19,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,22 +49,21 @@ public class NotifyPayServiceImpl implements NotifyPayService {
         try{
             passSign = AlipaySignature.rsaCheckV1(params, publicKey, "UTF-8", signType);
         }catch (AlipayApiException e){
-            LOGGER.error("check sign fail,trade_no:"+params.get("trade_no")+e);
-            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            LOGGER.error("check sign fail,trade_no:"+params.get("trade_no")+"_"+e.getMessage(),e);
+            return PayConstant.AlipayReturnEnum.FAILED.getName();;
         }
         if(!passSign){
-            LOGGER.error("check sign fail,trade_no:"+params.get("trade_no"));
-            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            LOGGER.warn("check sign fail,trade_no:"+params.get("trade_no"));
+            return PayConstant.AlipayReturnEnum.FAILED.getName();
         }
         String trade_status = String.valueOf(params.get("trade_status"));	// 交易状态
         String trade_no = String.valueOf(params.get("trade_no"));			// 渠道订单号
-        Long orderId=76L;
+        Long orderId=0L;
         try{
             orderId = Long.parseLong(trade_no);
         }catch (NumberFormatException e){
-            LOGGER.error("trade_no:"+e);
-            //return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
-
+            LOGGER.error("trade_no:"+trade_no+"parseLong_"+e.getMessage(),e);
+            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
         }
         Order order = orderService.getOrderById(orderId);
         int payStatus = order.getStatus();
@@ -80,11 +75,11 @@ public class NotifyPayServiceImpl implements NotifyPayService {
                 orderService.updateNote(orderId,trade_no+",alipay:"+trade_status, newStatus);
             }
         }else{
-            LOGGER.info("trade_status="+trade_status);
-            //return PayConstant.RETURN_ALIPAY_VALUE_SUCCESS;
+            LOGGER.warn("trade_no:{},trade_status:{}",trade_no,trade_status);
+            return PayConstant.AlipayReturnEnum.FAILED.getName();
         }
         doNotify(order);
-        return PayConstant.RETURN_ALIPAY_VALUE_SUCCESS;
+        return PayConstant.AlipayReturnEnum.SUCCESS.getName();
     }
 
 
@@ -92,7 +87,8 @@ public class NotifyPayServiceImpl implements NotifyPayService {
     public void doNotify(Order order) {
         SendResult sendResult = rocketMQTemplate.syncSend(orderTopic, new OrderPaidEvent(order.getId(),order.getPayAmount(),
                 createNotifyUrl(order),System.currentTimeMillis()));
-        LOGGER.info("syncSend1 to topic %s sendResult=%s %n", orderTopic, sendResult);
+        LOGGER.info("syncSend1 to topic:{} sendResult={}", orderTopic, sendResult.toString());
+
     }
     public String createNotifyUrl(Order payOrder) {
         Map<String, Object> paramMap = new HashMap<>();

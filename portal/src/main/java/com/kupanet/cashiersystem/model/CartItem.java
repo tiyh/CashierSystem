@@ -10,6 +10,7 @@ import java.util.Date;
 @Getter
 @Setter
 public class CartItem implements Serializable {
+    private static final long serialVersionUID = 1925862257848308779L;
 
     private Long id;
 

@@ -32,6 +32,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -44,11 +47,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             logger.info("checking authentication " + username);
             
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            	UserDetails userDetails = null;
-            	userDetails=(UserDetails) redisUtil.get(authToken);
-            	//if(userDetails==null){
-            	//	userDetails = this.userDetailsService.loadUserByUsername(username);
-            	//}
+            	UserDetails userDetails = (UserDetails) redisUtil.get(authToken);
+            	if(userDetails==null){
+            		userDetails = userDetailsService.loadUserByUsername(username);
+            	}
+            	if(userDetails!=null){
                 	if (jwtTokenUtil.validateToken(authToken, userDetails)) {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
@@ -57,6 +60,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                         logger.info("authenticated user " + username + ", setting security context");
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
+            	}
             }
         }
         chain.doFilter(request, response);

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class CartServiceImpl  implements CartService {
@@ -74,11 +73,11 @@ public class CartServiceImpl  implements CartService {
     }
 
     @Override
-    public List<CartItem> mergeCartList(Long memberId, List<CartItem> cartList1, List<CartItem> cartList2) {
-        for (CartItem cartItem : cartList2) {
-            cartList1 = addGoodsToCartList(memberId,cartList1, cartItem.getId(), cartItem.getQuantity());
+    public List<CartItem> mergeCartList(Long memberId, List<CartItem> cartListTo, List<CartItem> cartListFrom) {
+        for (CartItem cartItem : cartListFrom) {
+            cartListTo = addGoodsToCartList(memberId,cartListTo, cartItem.getId(), cartItem.getQuantity());
         }
-        return cartList1;
+        return cartListTo;
     }
     //TODO addGoodsToCartList String productAttr
 

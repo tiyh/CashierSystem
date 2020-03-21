@@ -18,7 +18,7 @@ import lombok.Setter;
 @TableName("cs_product")
 public class Product implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5433238620907696526L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

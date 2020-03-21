@@ -18,7 +18,7 @@ import java.io.Serializable;
 @TableName("cs_order_item")
 public class OrderItem implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 7678470002438596633L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

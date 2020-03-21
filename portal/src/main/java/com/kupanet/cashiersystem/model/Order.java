@@ -22,7 +22,7 @@ import java.util.List;
 @TableName("cs_order")
 public class Order implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -1907707563497837391L;
 
 	@TableField(exist = false)
 	List<OrderItem> orderItemList;

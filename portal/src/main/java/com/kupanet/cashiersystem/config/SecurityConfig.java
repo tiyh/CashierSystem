@@ -40,20 +40,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
     @Bean
     public UserDetailsService userDetailsService() {
-        return new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                Member member = memberService.getByUsername(username);
-                if (member != null) {
-                    return new Member();
-                }
-                throw new UsernameNotFoundException("用户名或密码错误");
+        return username -> {
+            Member member = memberService.getByUsername(username);
+            if (member != null) {
+                return new Member();
             }
+            throw new UsernameNotFoundException("用户名或密码错误");
         };
     }
 
 	@Bean
-    public JwtAuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
+    public JwtAuthenticationTokenFilter authenticationTokenFilterBean() {
         return new JwtAuthenticationTokenFilter();
     }
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {

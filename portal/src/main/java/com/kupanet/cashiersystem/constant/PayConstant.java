@@ -4,8 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PayConstant {
-    public static final String RETURN_ALIPAY_VALUE_SUCCESS = "success";
-    public static final String RETURN_ALIPAY_VALUE_FAIL = "fail";
+    public enum AlipayReturnEnum{
+        SUCCESS("success"),
+        FAILED("fail");
+        private String name;
+        AlipayReturnEnum(String str){
+            name=str;
+        }
+        public String getName(){
+            return name;
+        }
+    }
     public enum PayStatus{
         FAILED(-1,"TRADE_CLOSED"),
         INIT(0,"WAIT_BUYER_PAY"),
@@ -36,15 +45,4 @@ public class PayConstant {
         }
 
     }
-    /*public final static int PAY_STATUS_FAILED = -1; 	// 支付失败
-    public final static int PAY_STATUS_INIT = 0; 		// 初始态
-    public final static int PAY_STATUS_SUCCESS = 1; 	// 支付成功
-    public final static int PAY_STATUS_COMPLETE = 2; 	// 业务完成
-
-    public static class AlipayTradeStatus {
-        public final static String WAIT = "WAIT_BUYER_PAY";		// 交易创建,等待买家付款
-        public final static String CLOSED = "TRADE_CLOSED";		// 交易关闭
-        public final static String SUCCESS = "TRADE_SUCCESS";		// 交易成功
-        public final static String FINISHED = "TRADE_FINISHED";	// 交易成功且结束
-    }*/
 }

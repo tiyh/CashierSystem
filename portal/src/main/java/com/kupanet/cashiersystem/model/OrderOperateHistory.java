@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @TableName("cs_order_operate_history")
-public class OrderOperateHistory {
+public class OrderOperateHistory implements Serializable {
+    private static final long serialVersionUID = 6072863123449084135L;
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 

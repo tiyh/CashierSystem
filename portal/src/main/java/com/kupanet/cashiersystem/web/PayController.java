@@ -56,10 +56,10 @@ public class PayController {
             }
             params.put(name, valueStr);
         }
-        LOGGER.info("通知请求数据:reqStr="+params);
+        LOGGER.info("notify:reqStr="+params);
         if(params.isEmpty()) {
-            LOGGER.error("请求参数为空");
-            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            LOGGER.warn("failed,params isEmpty,not handleAliPayNotify");
+            return PayConstant.AlipayReturnEnum.FAILED.getName();
         }
         return notifyPayService.handleAliPayNotify(params);
 

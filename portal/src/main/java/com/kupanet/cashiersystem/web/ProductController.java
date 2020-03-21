@@ -14,10 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * <p>
  * 商品信息
- * </p>
- *
  */
 @Slf4j
 @RestController

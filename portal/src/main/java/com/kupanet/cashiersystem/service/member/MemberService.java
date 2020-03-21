@@ -43,4 +43,6 @@ public interface MemberService extends IService<Member> {
     String refreshToken(String token);
 
     Object register(Member umsMember);
+    boolean logout(String oldToken);
+
 }

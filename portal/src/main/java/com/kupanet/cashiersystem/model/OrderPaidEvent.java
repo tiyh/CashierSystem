@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class OrderPaidEvent implements Serializable {
+    private static final long serialVersionUID = 1674225916629499297L;
     private Long orderId;
 
     private BigDecimal paidMoney;

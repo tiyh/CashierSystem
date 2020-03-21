@@ -116,9 +116,9 @@ public class OrderController {
 
 	@DeleteMapping (value = "/order/batch")
 	public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
-		boolean count = orderService.removeByIds(ids);
-		if (count) {
-			return new CommonResult().success(count);
+		boolean result = orderService.removeByIds(ids);
+		if (result) {
+			return new CommonResult().success();
 		} else {
 			return new CommonResult().failed();
 		}

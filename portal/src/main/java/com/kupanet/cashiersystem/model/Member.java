@@ -14,7 +14,7 @@ import java.util.Date;
 
 @TableName("cs_member")
 public class Member implements UserDetails {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5569868658394399067L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
