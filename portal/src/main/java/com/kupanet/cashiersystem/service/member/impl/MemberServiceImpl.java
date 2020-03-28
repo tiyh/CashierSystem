@@ -45,9 +45,6 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
     private static final Logger LOGGER = LoggerFactory.getLogger(MemberServiceImpl.class);
 
     @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Value("${redis.key.prefix.authCode}")
     private String REDIS_KEY_PREFIX_AUTH_CODE;
@@ -164,7 +161,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
         String token = null;
         //UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, passwordEncoder.encode(password));
         try {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = getByUsername(username);
             if(!passwordEncoder.matches(password,userDetails.getPassword())){
                 throw new BadCredentialsException("密码不正确");
             }

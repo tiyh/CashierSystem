@@ -50,7 +50,7 @@ public class NotifyPayServiceImpl implements NotifyPayService {
             passSign = AlipaySignature.rsaCheckV1(params, publicKey, "UTF-8", signType);
         }catch (AlipayApiException e){
             LOGGER.error("check sign fail,trade_no:"+params.get("trade_no")+"_"+e.getMessage(),e);
-            return PayConstant.AlipayReturnEnum.FAILED.getName();;
+            return PayConstant.AlipayReturnEnum.FAILED.getName();
         }
         if(!passSign){
             LOGGER.warn("check sign fail,trade_no:"+params.get("trade_no"));
@@ -63,7 +63,7 @@ public class NotifyPayServiceImpl implements NotifyPayService {
             orderId = Long.parseLong(trade_no);
         }catch (NumberFormatException e){
             LOGGER.error("trade_no:"+trade_no+"parseLong_"+e.getMessage(),e);
-            return PayConstant.RETURN_ALIPAY_VALUE_FAIL;
+            return PayConstant.AlipayReturnEnum.FAILED.getName();
         }
         Order order = orderService.getOrderById(orderId);
         int payStatus = order.getStatus();
