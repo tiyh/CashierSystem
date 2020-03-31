@@ -1,7 +1,6 @@
 package com.kupanet.cashiersystem.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtil {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplatePlus<String, Object> redisTemplate;
     /**
      * 指定缓存失效时间
      * @param key 键
@@ -537,6 +536,68 @@ public class RedisUtil {
             e.printStackTrace();
             return 0;
         }
+    }
+    /**
+     * Reserve a bloom filter.
+     * @param name The key of the filter
+     * @param initCapacity Optimize for this many items
+     * @param errorRate The desired rate of false positives
+     *
+     * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
+     * is called.
+     */
+    public void createBloomFilter(String name, long initCapacity, double errorRate) {
+        try {
+            redisTemplate.createBloomFilter(name,initCapacity,errorRate);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    /**
+     * Adds an item to the filter
+     * @param name The name of the filter
+     * @param value The value to add to the filter
+     * @return true if the item was not previously in the filter.
+     */
+    public boolean addBloom(String name, String value) {
+        try {
+            return redisTemplate.addBloom(name,value);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+    /**
+     * Add one or more items to a filter
+     * @param name Name of the filter
+     * @param values values to add to the filter.
+     * @return An array of booleans of the same length as the number of values.
+     * Each boolean values indicates whether the corresponding element was previously in the
+     * filter or not. A true value means the item did not previously exist, whereas a
+     * false value means it may have previously existed.
+     *
+     */
+    public boolean[] addBloomMulti(String name, String ...values) {
+        try{
+            return redisTemplate.addBloomMulti(name,values);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new boolean[values.length];
+    }
+    /**
+     * Check if an item exists in the filter.
+     * @param name Key of the filter to check
+     * @param value Value to check for
+     * @return true if the item may exist in the filter, false if the item does not exist in the filter.
+     */
+    public boolean existsBloom(String name, String value) {
+        try {
+            return redisTemplate.existsBloom(name,value);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
     }
 
 }

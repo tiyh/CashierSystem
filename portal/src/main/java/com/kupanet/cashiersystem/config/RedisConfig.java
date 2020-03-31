@@ -1,6 +1,7 @@
 package com.kupanet.cashiersystem.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kupanet.cashiersystem.util.RedisTemplatePlus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import io.rebloom.client.Client;
+
 
 @Configuration
 @PropertySource(value = "classpath:/application.properties")
@@ -49,6 +52,16 @@ public class RedisConfig {
         template.setHashKeySerializer(stringSerializer);
         return template;
     }
+    @Bean
+    public RedisTemplatePlus<String, Object> redisTemplatePlus(RedisConnectionFactory factory) {
+        RedisTemplatePlus<String, Object> template = new RedisTemplatePlus<>(this.host,this.port);
+        template.setConnectionFactory(factory);
+        RedisSerializer<String> stringSerializer = new StringRedisSerializer();
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        return template;
+    }
+
     private void setSerializer(StringRedisTemplate template) {
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
                 new Jackson2JsonRedisSerializer<>(Object.class);

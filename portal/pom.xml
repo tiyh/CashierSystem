@@ -117,17 +117,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
-			<exclusions>
+			<!--exclusions>
 				<exclusion>
 					<groupId>io.lettuce</groupId>
 					<artifactId>lettuce-core</artifactId>
 				</exclusion>
-			</exclusions>
+			</exclusions-->
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
-		</dependency>
+		</dependency-->
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -154,6 +154,11 @@
 			<groupId>org.apache.rocketmq</groupId>
 			<artifactId>rocketmq-spring-boot-starter</artifactId>
 			<version>${rocketmq-spring-boot-starter-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.redislabs</groupId>
+			<artifactId>jrebloom</artifactId>
+			<version>1.2.0</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
