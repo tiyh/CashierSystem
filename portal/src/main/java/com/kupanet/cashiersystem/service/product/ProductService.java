@@ -1,12 +1,16 @@
 package com.kupanet.cashiersystem.service.product;
 
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kupanet.cashiersystem.model.Product;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +19,7 @@ import java.util.List;
  * </p>
  *
  */
-public interface ProductService extends IService<Product> {
+public interface ProductService  {
     @Transactional(isolation = Isolation.DEFAULT, propagation = Propagation.REQUIRED)
     int create(Product productParam);
 
@@ -49,6 +53,13 @@ public interface ProductService extends IService<Product> {
      * 根据商品名称或者货号模糊查询
      */
     List<Product> list(String keyword);
+
+    boolean removeById(Serializable var1);
+
+    boolean removeByIds(Collection<? extends Serializable> var1);
+    Product getById(Serializable var1);
+
+    IPage<Product> page(IPage<Product> var1, Wrapper<Product> var2);
 
 }
 

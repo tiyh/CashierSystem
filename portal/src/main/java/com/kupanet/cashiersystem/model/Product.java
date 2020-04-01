@@ -1,20 +1,22 @@
 package com.kupanet.cashiersystem.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.io.Serializable;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
  * 商品信息
  */
+//todo
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 @TableName("cs_product")
 public class Product implements Serializable {
 
@@ -129,4 +131,5 @@ public class Product implements Serializable {
                 ", productCategoryName=" + productCategoryName +
                 "}";
     }
+
 }

@@ -1,6 +1,9 @@
 package com.kupanet.cashiersystem.service.product.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.sql.SqlHelper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kupanet.cashiersystem.DAO.ProductMapper;
 import com.kupanet.cashiersystem.model.Product;
@@ -12,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,7 +29,7 @@ import java.util.List;
  * @since 2019-04-19
  */
 @Service
-public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
+public class ProductServiceImpl implements ProductService {
     private final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
     @Autowired
     private ProductMapper productMapper;
@@ -101,6 +106,22 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return productMapper.selectList(queryWrapper);
     }
 
+    @Override
+    public boolean removeById(Serializable id) {
+        return SqlHelper.delBool(productMapper.deleteById(id));
+    }
+
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return SqlHelper.delBool(productMapper.deleteBatchIds(idList));
+    }
+
+    @Override
+    public Product getById(Serializable id) {
+        return productMapper.selectById(id);
+    }
+
 
 
     /**
@@ -125,6 +146,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             logger.warn("创建产品出错:{}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public IPage<Product> page(IPage<Product> page, Wrapper<Product> queryWrapper) {
+        queryWrapper = (Wrapper<Product>) SqlHelper.fillWrapper(page, queryWrapper);
+        return productMapper.selectPage(page, queryWrapper);
     }
 
 }
