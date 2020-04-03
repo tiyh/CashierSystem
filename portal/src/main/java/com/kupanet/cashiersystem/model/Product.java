@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +15,6 @@ import lombok.Setter;
 //todo
 @Getter
 @Setter
-@JsonIgnoreProperties(ignoreUnknown = true)
 @TableName("cs_product")
 public class Product implements Serializable {
 
@@ -25,7 +23,6 @@ public class Product implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @TableField("product_category_id")
     private Long productCategoryId;
 
     /**
