@@ -32,6 +32,16 @@ public class CanalDatabaseEventConsumer extends AbstractCanalDatabaseEventConsum
     protected String getIdValue(Product product) {
         return String.valueOf(product.getId());
     }
+    public static String generateRedisKey(String id){
+        return new StringBuilder()
+                .append(RedisConstant.PRODUCT_TABLE_NAME)
+                .append("_")
+                .append(id)
+                .toString();
+    }
+    protected String getWrapRedisKey(Product product) {
+        return generateRedisKey(getIdValue(product));
 
+    }
 }
 

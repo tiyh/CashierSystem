@@ -101,6 +101,21 @@ public class ProductController {
 
     }
 
+    @GetMapping(value = "/category/{id}")
+    public Object getProductsByCategoryId( @PathVariable Long id) {
+        try {
+            if (id==null||id<=0) {
+                return new CommonResult().paramFailed("CategoryId");
+            }
+            List<Product> coupon = productService.getByCategoryId(id);
+            return new CommonResult().success(coupon);
+        } catch (Exception e) {
+            logger.error("查询分类商品明细：%s", e.getMessage(), e);
+            return new CommonResult().failed();
+        }
+
+    }
+
     @DeleteMapping(value = "/batch")
     public Object deleteBatch(@RequestParam("ids") List<Long> ids) {
         boolean count = productService.removeByIds(ids);
@@ -109,12 +124,6 @@ public class ProductController {
         } else {
             return new CommonResult().failed();
         }
-    }
-
-    @GetMapping(value = "/info/{id}")
-    public Object getUpdateInfo(@PathVariable Long id) {
-        Product productResult = productService.getUpdateInfo(id);
-        return new CommonResult().success(productResult);
     }
 
 

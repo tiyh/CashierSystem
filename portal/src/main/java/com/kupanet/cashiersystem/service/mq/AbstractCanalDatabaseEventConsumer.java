@@ -50,8 +50,9 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
         } else {
             switch (flatMessage.getType()){
                 case SQLType.INSERT:redisInsert(getData(flatMessage));break;
-                case SQLType.UPDATE:redisUpdate(getData(flatMessage));break;
                 case SQLType.DELETE:redisDelete(getData(flatMessage));break;
+                case SQLType.CACHE_FROM_QUERY:
+                case SQLType.UPDATE:redisUpdate(getData(flatMessage));break;
                 default:{
                     LOGGER.warn("onMessage :{} do nothing",flatMessage.getType());
                     break;
@@ -80,14 +81,6 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     }
     protected Class<T> getClassType() {
         return (Class<T>) ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-    }
-    protected String getWrapRedisKey(T t) {
-        return new StringBuilder()
-                .append(getModelName())
-                .append("_")
-                .append(getIdValue(t))
-                .toString();
-
     }
     protected void redisInsert( Map<String,T> columns){
         Random r = new Random();
@@ -143,6 +136,6 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     }
     protected abstract String getModelName();
     protected abstract String getIdValue(T t);
-
+    protected abstract String getWrapRedisKey(T t);
 
 }

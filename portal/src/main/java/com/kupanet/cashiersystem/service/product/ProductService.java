@@ -24,11 +24,6 @@ public interface ProductService  {
     int create(Product productParam);
 
     /**
-     * 根据商品编号获取更新信息
-     */
-    Product getUpdateInfo(Long id);
-
-    /**
      * 更新商品
      */
 
@@ -58,6 +53,8 @@ public interface ProductService  {
 
     boolean removeByIds(Collection<? extends Serializable> var1);
     Product getById(Serializable var1);
+    List<Product> getByCategoryId(Long categoryId);
+
 
     IPage<Product> page(IPage<Product> var1, Wrapper<Product> var2);
 

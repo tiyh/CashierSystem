@@ -1,16 +1,26 @@
 package com.kupanet.cashiersystem.service.product.impl;
 
+import com.alibaba.otter.canal.protocol.FlatMessage;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.sql.SqlHelper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kupanet.cashiersystem.DAO.ProductMapper;
+import com.kupanet.cashiersystem.model.BloomRetryEvent;
 import com.kupanet.cashiersystem.model.Product;
+import com.kupanet.cashiersystem.service.mq.CanalDatabaseEventConsumer;
 import com.kupanet.cashiersystem.service.product.ProductService;
+import com.kupanet.cashiersystem.util.CanalUtil;
+import com.kupanet.cashiersystem.util.RedisUtil;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -31,45 +41,31 @@ import java.util.List;
 @Service
 public class ProductServiceImpl implements ProductService {
     private final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+
+    @Value("${cashier.rocketmq.canalDatabaseTopic}")
+    private String canalDatabaseTopic;
+
     @Autowired
     private ProductMapper productMapper;
+    @Autowired
+    private RedisUtil redisUtil;
+
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
 
     @Override
-    public int create(/*ProductParam*/ Product productParam) {
-        int count;
-        //创建商品
+    public int create( Product productParam) {
         Product product = productParam;
         product.setId(null);
-        productMapper.insert(product);
-        //根据促销类型设置价格：、阶梯价格、满减价格
-        Long productId = product.getId();
-        //会员价格
-        //阶梯价格
-        //满减价格
-        //处理sku的编码
-        //添加sku库存信息
-        //添加商品参数,添加自定义商品规格
-        //关联专题
-        //关联优选
-        count = 1;
-        return count;
-    }
-
-    @Override
-    public Product getUpdateInfo(Long id) {
-        return productMapper.getUpdateInfo(id);
+        return productMapper.insert(product);
     }
 
     @Override
     public int update(Long id, Product productParam) {
-        int count;
-        //更新商品信息
         Product product = productParam;
         product.setId(id);
-        productMapper.updateById(product);
-         count = 1;
-        return count;
+        return productMapper.updateById(product);
     }
 
     @Override
@@ -119,33 +115,33 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getById(Serializable id) {
-        return productMapper.selectById(id);
+        Product product;
+        if((product= (Product) redisUtil.get(CanalDatabaseEventConsumer.generateRedisKey(String.valueOf(id))))
+                !=null){
+            return product;
+        }else {
+            product = productMapper.selectById(id);
+            FlatMessage flatMessage = new CanalUtil<Product>().convertFlatMessageFromObject(product);
+            if(flatMessage!=null&&flatMessage.getData()!=null){
+                rocketMQTemplate.asyncSend(canalDatabaseTopic, flatMessage, new SendCallback() {
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                    }
+                    @Override
+                    public void onException(Throwable throwable) {
+                        logger.error("send delete redis topic fail; {}", throwable.getMessage());
+                    }
+                });
+            }
+        }
+        return product;
     }
 
-
-
-    /**
-     * 建立和插入关系表操作
-     *
-     * @param dao       可以操作的dao
-     * @param dataList  要插入的数据
-     * @param productId 建立关系的id
-     */
-    private void relateAndInsertList(Object dao, List dataList, Long productId) {
-        try {
-            if (CollectionUtils.isEmpty(dataList)) return;
-            for (Object item : dataList) {
-                Method setId = item.getClass().getMethod("setId", Long.class);
-                setId.invoke(item, (Long) null);
-                Method setProductId = item.getClass().getMethod("setProductId", Long.class);
-                setProductId.invoke(item, productId);
-            }
-            Method insertList = dao.getClass().getMethod("saveBatch", List.class);
-            insertList.invoke(dao, dataList);
-        } catch (Exception e) {
-            logger.warn("创建产品出错:{}", e.getMessage());
-            throw new RuntimeException(e.getMessage());
-        }
+    @Override
+    public List<Product> getByCategoryId(Long categoryId) {
+        //redisUtil.hget();
+        //todo
+        return productMapper.selectByCategoryId(categoryId);
     }
 
     public IPage<Product> page(IPage<Product> page, Wrapper<Product> queryWrapper) {

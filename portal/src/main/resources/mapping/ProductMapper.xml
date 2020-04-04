@@ -24,12 +24,11 @@
         <result column="product_category_name" property="productCategoryName" />
     </resultMap>
 
-    <select id="getUpdateInfo" resultMap="updateInfoMap">
+    <select id="selectByCategoryId" resultMap="BaseResultMap">
         SELECT *,
         FROM product p
-        WHERE p.id=#{id};
+        WHERE p.product_category_id=#{product_category_id};
     </select>
-
 
 
     <!-- 通用查询结果列 -->
