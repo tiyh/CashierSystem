@@ -4,8 +4,10 @@ import com.alibaba.otter.canal.protocol.FlatMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.kupanet.cashiersystem.constant.RedisConstant;
 import com.kupanet.cashiersystem.constant.SQLType;
 import com.kupanet.cashiersystem.model.BloomRetryEvent;
+import com.kupanet.cashiersystem.model.RedisRetryEvent;
 import com.kupanet.cashiersystem.util.RedisUtil;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -23,11 +25,8 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
 
     private static Logger LOGGER = LoggerFactory.getLogger(AbstractCanalDatabaseEventConsumer.class);
 
-    @Value("${cashier.rocketmq.redis.deleteTopic}")
-    protected String deleteTopic;
-
-    @Value("${cashier.rocketmq.redis.bloomTopic}")
-    protected String bloomTopic;
+    @Value("${cashier.rocketmq.redis.retryTopic}")
+    protected String redisRetryTopic;
 
     @Autowired
     protected RedisUtil redisUtil;
@@ -67,7 +66,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
         List<Map<String, String>> sourceData = flatMessage.getData();
         Map<String,T> targetData = new HashMap<>(sourceData.size());
         for (Map<String, String> map : sourceData) {
-            String jsonStr = null;
+            String jsonStr;
             try {
                 jsonStr = mapper.writeValueAsString(map);
                 LOGGER.info("onMessage jsonStr:{}",jsonStr);
@@ -83,7 +82,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
         List<Map<String, String>> sourceData = flatMessage.getOld();
         Map<String,T> targetData = new HashMap<>(sourceData.size());
         for (Map<String, String> map : sourceData) {
-            String jsonStr = null;
+            String jsonStr;
             try {
                 jsonStr = mapper.writeValueAsString(map);
                 LOGGER.info("onMessage jsonStr:{}",jsonStr);
@@ -105,7 +104,12 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
             LOGGER.info("redisInsert getWrapRedisKey:{},column:{}",getWrapRedisKey(column.getValue()),column.getKey());
             redisUtil.set(getWrapRedisKey(column.getValue()),column.getKey(),randomInt);
             if(!redisUtil.addBloom(getModelName(),String.valueOf(getIdValue(column.getValue())))){
-                rocketMQTemplate.asyncSend(bloomTopic, MessageBuilder.withPayload(new BloomRetryEvent(getModelName(),String.valueOf(getIdValue(column.getValue())))).build(), new SendCallback() {
+                RedisRetryEvent rre = new RedisRetryEvent.Builder()
+                        .key(getModelName())
+                        .value(String.valueOf(getIdValue(column.getValue())))
+                        .commandType(RedisConstant.CommandType.BlOOM_ADD)
+                        .build();
+                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(new BloomRetryEvent(getModelName(),String.valueOf(getIdValue(column.getValue())))).build(), new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
                     }
@@ -133,8 +137,11 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
         for (Map.Entry<String,T> column : columns.entrySet()) {
             LOGGER.info("redisDelete getWrapRedisKey:{},column:{}",getWrapRedisKey(column.getValue()),column.getKey());
             if(!redisUtil.del(getWrapRedisKey(column.getValue()))){
-                String message = getWrapRedisKey(column.getValue());
-                rocketMQTemplate.asyncSend(deleteTopic, MessageBuilder.withPayload(message).build(), new SendCallback() {
+                RedisRetryEvent rre = new RedisRetryEvent.Builder()
+                        .key(getWrapRedisKey(column.getValue()))
+                        .commandType(RedisConstant.CommandType.DELETE)
+                        .build();
+                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(rre).build(), new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
                     }

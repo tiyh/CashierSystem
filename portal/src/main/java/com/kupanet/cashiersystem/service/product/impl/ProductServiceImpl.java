@@ -8,7 +8,8 @@ import com.baomidou.mybatisplus.core.toolkit.sql.SqlHelper;
 import com.kupanet.cashiersystem.DAO.ProductMapper;
 import com.kupanet.cashiersystem.constant.RedisConstant;
 import com.kupanet.cashiersystem.model.Product;
-import com.kupanet.cashiersystem.service.mq.CanalDatabaseEventConsumer;
+import com.kupanet.cashiersystem.model.RedisRetryEvent;
+import com.kupanet.cashiersystem.service.mq.CanalProductEventConsumer;
 import com.kupanet.cashiersystem.service.product.ProductService;
 import com.kupanet.cashiersystem.util.CanalUtil;
 import com.kupanet.cashiersystem.util.RedisUtil;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -29,12 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * <p>
  * 商品信息 服务实现类
- * </p>
- *
- * @author zscat
- * @since 2019-04-19
  */
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -42,6 +39,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Value("${cashier.rocketmq.canalDatabaseTopic}")
     private String canalDatabaseTopic;
+
+    @Value("${cashier.rocketmq.redis.retryTopic}")
+    private String redisRetryTopic;
+    //messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
+    protected final static int DELAY_LEVEL = 1;
 
     @Autowired
     private ProductMapper productMapper;
@@ -51,7 +53,6 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
 
-
     @Override
     public int create( Product productParam) {
         productParam.setId(null);
@@ -60,9 +61,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public int update(Long id, Product productParam) {
-        Product product = productParam;
-        product.setId(id);
-        return productMapper.updateById(product);
+        productParam.setId(id);
+        return productMapper.updateById(productParam);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class ProductServiceImpl implements ProductService {
             return null;
         }
         Product product;
-        if((product= (Product) redisUtil.get(CanalDatabaseEventConsumer.generateRedisKey(String.valueOf(id))))
+        if((product= (Product) redisUtil.get(CanalProductEventConsumer.generateRedisKey(String.valueOf(id))))
                 !=null){
             return product;
         }else {
@@ -140,7 +140,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getByCategoryId(Long categoryId) {
         List<Product> lp = new LinkedList<>();
-        Set<Object> ids = redisUtil.sGet(CanalDatabaseEventConsumer.generateRedisCategoryKey(categoryId));
+        Set<Object> ids = redisUtil.sGet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId));
         if(ids!=null&& !ids.isEmpty()){
             for(Object ob: ids){
                 lp.add(getById((Long)ob));
@@ -151,7 +151,25 @@ public class ProductServiceImpl implements ProductService {
             lp = productMapper.selectByCategoryId(categoryId);
         }
         for (Product p:lp) {
-            redisUtil.sSet(CanalDatabaseEventConsumer.generateRedisCategoryKey(categoryId),p.getId());
+            if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
+                RedisRetryEvent rre = new RedisRetryEvent.Builder()
+                        .key(CanalProductEventConsumer.generateRedisCategoryKey(categoryId))
+                        .value(String.valueOf(p.getId()))
+                        .commandType(RedisConstant.CommandType.SET_SET)
+                        .build();
+                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(rre).build(), new SendCallback() {
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                    }
+
+                    @Override
+                    public void onException(Throwable throwable) {
+                        if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
+                            logger.error("send set_set redis topic fail; {}", throwable.getMessage());
+                        }
+                    }
+                },rocketMQTemplate.getProducer().getSendMsgTimeout(),DELAY_LEVEL);
+            }
         }
         return lp;
     }
