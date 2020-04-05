@@ -93,7 +93,10 @@ public class ProductController {
                 return new CommonResult().paramFailed("商品信息id");
             }
             Product coupon = productService.getById(id);
-            return new CommonResult().success(coupon);
+            if(coupon!=null)
+                return new CommonResult().success(coupon);
+            else return new CommonResult().failed();
+
         } catch (Exception e) {
             logger.error("查询商品信息明细：%s", e.getMessage(), e);
             return new CommonResult().failed();

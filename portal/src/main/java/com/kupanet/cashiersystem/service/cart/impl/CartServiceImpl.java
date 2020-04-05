@@ -105,6 +105,9 @@ public class CartServiceImpl  implements CartService {
         if(num<=0){
             throw new RuntimeException("illegal number");
         }
+        if(product==null){
+            throw new RuntimeException("product is null");
+        }
         CartItem cartItem = new CartItem(product);
         //Random rnd = new Random();
         //cartItem.setId(rnd.nextLong());

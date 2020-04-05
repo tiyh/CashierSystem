@@ -24,16 +24,16 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     private static Logger LOGGER = LoggerFactory.getLogger(AbstractCanalDatabaseEventConsumer.class);
 
     @Value("${cashier.rocketmq.redis.deleteTopic}")
-    private String deleteTopic;
+    protected String deleteTopic;
 
     @Value("${cashier.rocketmq.redis.bloomTopic}")
-    private String bloomTopic;
+    protected String bloomTopic;
 
     @Autowired
-    private RedisUtil redisUtil;
+    protected RedisUtil redisUtil;
 
     @Autowired
-    private RocketMQTemplate rocketMQTemplate;
+    protected RocketMQTemplate rocketMQTemplate;
     //messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
     protected final static int DELAY_LEVEL = 1;
 
@@ -52,7 +52,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
                 case SQLType.INSERT:redisInsert(getData(flatMessage));break;
                 case SQLType.DELETE:redisDelete(getData(flatMessage));break;
                 case SQLType.CACHE_FROM_QUERY:
-                case SQLType.UPDATE:redisUpdate(getData(flatMessage));break;
+                case SQLType.UPDATE:redisUpdate(getData(flatMessage),getOldData(flatMessage));break;
                 default:{
                     LOGGER.warn("onMessage :{} do nothing",flatMessage.getType());
                     break;
@@ -65,6 +65,22 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
 
     protected Map<String,T> getData(FlatMessage flatMessage) {
         List<Map<String, String>> sourceData = flatMessage.getData();
+        Map<String,T> targetData = new HashMap<>(sourceData.size());
+        for (Map<String, String> map : sourceData) {
+            String jsonStr = null;
+            try {
+                jsonStr = mapper.writeValueAsString(map);
+                LOGGER.info("onMessage jsonStr:{}",jsonStr);
+                T t =mapper.readValue(jsonStr,getClassType());
+                targetData.put(jsonStr,t);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+        return targetData;
+    }
+    protected Map<String,T> getOldData(FlatMessage flatMessage) {
+        List<Map<String, String>> sourceData = flatMessage.getOld();
         Map<String,T> targetData = new HashMap<>(sourceData.size());
         for (Map<String, String> map : sourceData) {
             String jsonStr = null;
@@ -105,7 +121,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
 
         }
     }
-    protected void redisUpdate( Map<String,T> columns){
+    protected void redisUpdate( Map<String,T> columns,Map<String,T> old){
         Random r = new Random();
         int randomInt = 120+r.nextInt(60);
         for (Map.Entry<String,T> column : columns.entrySet()) {

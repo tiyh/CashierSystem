@@ -1,6 +1,5 @@
 package com.kupanet.cashiersystem.model;
 
-import java.math.BigDecimal;
 
 public class BloomRetryEvent {
     private static final long serialVersionUID = 5479875081384333294L;

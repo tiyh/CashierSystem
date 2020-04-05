@@ -5,9 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.sql.SqlHelper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kupanet.cashiersystem.DAO.ProductMapper;
-import com.kupanet.cashiersystem.model.BloomRetryEvent;
+import com.kupanet.cashiersystem.constant.RedisConstant;
 import com.kupanet.cashiersystem.model.Product;
 import com.kupanet.cashiersystem.service.mq.CanalDatabaseEventConsumer;
 import com.kupanet.cashiersystem.service.product.ProductService;
@@ -20,15 +19,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -56,9 +54,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public int create( Product productParam) {
-        Product product = productParam;
-        product.setId(null);
-        return productMapper.insert(product);
+        productParam.setId(null);
+        return productMapper.insert(productParam);
     }
 
     @Override
@@ -92,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> list(String keyword) {
-        QueryWrapper queryWrapper = new QueryWrapper();
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("delete_status",0);
 
         if (!StringUtils.isEmpty(keyword)) {
@@ -115,6 +112,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getById(Serializable id) {
+        if(!redisUtil.existsBloom(RedisConstant.PRODUCT_TABLE_NAME,String.valueOf(id))){
+            return null;
+        }
         Product product;
         if((product= (Product) redisUtil.get(CanalDatabaseEventConsumer.generateRedisKey(String.valueOf(id))))
                 !=null){
@@ -139,9 +139,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getByCategoryId(Long categoryId) {
-        //redisUtil.hget();
-        //todo
-        return productMapper.selectByCategoryId(categoryId);
+        List<Product> lp = new LinkedList<>();
+        Set<Object> ids = redisUtil.sGet(CanalDatabaseEventConsumer.generateRedisCategoryKey(categoryId));
+        if(ids!=null&& !ids.isEmpty()){
+            for(Object ob: ids){
+                lp.add(getById((Long)ob));
+            }
+            return lp;
+        }
+        else{
+            lp = productMapper.selectByCategoryId(categoryId);
+        }
+        for (Product p:lp) {
+            redisUtil.sSet(CanalDatabaseEventConsumer.generateRedisCategoryKey(categoryId),p.getId());
+        }
+        return lp;
     }
 
     public IPage<Product> page(IPage<Product> page, Wrapper<Product> queryWrapper) {

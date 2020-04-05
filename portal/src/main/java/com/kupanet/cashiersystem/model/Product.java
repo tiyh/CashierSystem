@@ -12,7 +12,6 @@ import lombok.Setter;
 /**
  * 商品信息
  */
-//todo
 @Getter
 @Setter
 @TableName("cs_product")
