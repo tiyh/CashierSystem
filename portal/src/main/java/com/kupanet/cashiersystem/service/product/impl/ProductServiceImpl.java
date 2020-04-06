@@ -143,32 +143,41 @@ public class ProductServiceImpl implements ProductService {
         Set<Object> ids = redisUtil.sGet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId));
         if(ids!=null&& !ids.isEmpty()){
             for(Object ob: ids){
-                lp.add(getById((Long)ob));
+                Product p = getById((Long)ob);
+                if(categoryId.equals(p.getProductCategoryId())) {
+                    lp.add(p);
+                }else {
+                    redisUtil.setRemove(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId());
+                    Long newCId =p.getProductCategoryId();
+                    if(newCId!=null && newCId!=0){
+                        redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(p.getProductCategoryId()), p.getId());
+                    }
+                }
             }
             return lp;
         }
         else{
             lp = productMapper.selectByCategoryId(categoryId);
-        }
-        for (Product p:lp) {
-            if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
-                RedisRetryEvent rre = new RedisRetryEvent.Builder()
-                        .key(CanalProductEventConsumer.generateRedisCategoryKey(categoryId))
-                        .value(String.valueOf(p.getId()))
-                        .commandType(RedisConstant.CommandType.SET_SET)
-                        .build();
-                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(rre).build(), new SendCallback() {
-                    @Override
-                    public void onSuccess(SendResult sendResult) {
-                    }
-
-                    @Override
-                    public void onException(Throwable throwable) {
-                        if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
-                            logger.error("send set_set redis topic fail; {}", throwable.getMessage());
+            for (Product p:lp) {
+                if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
+                    RedisRetryEvent rre = new RedisRetryEvent.Builder()
+                            .key(CanalProductEventConsumer.generateRedisCategoryKey(categoryId))
+                            .value(String.valueOf(p.getId()))
+                            .commandType(RedisConstant.CommandType.SET_SET)
+                            .build();
+                    rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(rre).build(), new SendCallback() {
+                        @Override
+                        public void onSuccess(SendResult sendResult) {
                         }
-                    }
-                },rocketMQTemplate.getProducer().getSendMsgTimeout(),DELAY_LEVEL);
+
+                        @Override
+                        public void onException(Throwable throwable) {
+                            if(redisUtil.sSet(CanalProductEventConsumer.generateRedisCategoryKey(categoryId),p.getId())<=0){
+                                logger.error("send set_set redis topic fail; {}", throwable.getMessage());
+                            }
+                        }
+                    },rocketMQTemplate.getProducer().getSendMsgTimeout(),DELAY_LEVEL);
+                }
             }
         }
         return lp;
