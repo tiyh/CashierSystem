@@ -58,6 +58,10 @@ import java.util.Random;
             int randomInt = 120+r.nextInt(60);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
                 Product product = column.getValue();
+                if(product==null){
+                    LOGGER.warn("redisInsert product is null,columns:"+columns.toString());
+                    return;
+                }
                 LOGGER.info("redisInsert getWrapRedisKey:{},column:{}",getWrapRedisKey(column.getValue()),column.getKey());
                 redisUtil.set(getWrapRedisKey(product),column.getKey(),randomInt);
                 if(!redisUtil.addBloom(getModelName(),String.valueOf(product.getId()))){
@@ -91,6 +95,10 @@ import java.util.Random;
             int randomInt = 120+r.nextInt(60);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
                 Product newProduct = column.getValue();
+                if(newProduct==null){
+                    LOGGER.warn("redisUpdate newProduct is null,columns:"+columns.toString());
+                    return;
+                }
                 LOGGER.info("redisUpdate getWrapRedisKey:{},column:{}",getWrapRedisKey(newProduct),column.getKey());
                 redisUtil.set(getWrapRedisKey(newProduct),column.getKey(),randomInt);
                 Long categoryId=newProduct.getProductCategoryId();

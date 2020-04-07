@@ -80,6 +80,9 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     }
     protected Map<String,T> getOldData(FlatMessage flatMessage) {
         List<Map<String, String>> sourceData = flatMessage.getOld();
+        if(sourceData==null){
+            return Collections.emptyMap();
+        }
         Map<String,T> targetData = new HashMap<>(sourceData.size());
         for (Map<String, String> map : sourceData) {
             String jsonStr;
