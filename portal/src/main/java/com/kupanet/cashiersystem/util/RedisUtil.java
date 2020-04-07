@@ -1,5 +1,8 @@
 package com.kupanet.cashiersystem.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -11,10 +14,55 @@ import java.util.concurrent.TimeUnit;
 
 
 @Component
-public class RedisUtil {
+public class RedisUtil<V> {
+    private final static int mutexKeyRetryTimes = 3;
 
     @Autowired
     private RedisTemplatePlus<String, Object> redisTemplate;
+
+    public interface RedisCallback<String,V> {
+        public V doCallback(String k);
+    }
+
+    public V getWithMutexKey(String key, String mutexKey, String mutexValue, long timeout, TimeUnit timeUnit, RedisCallback<String,V> redisCallback,Class<V> clazz){
+        V result=null;
+        String value = (String) get(key);
+        if (value  == null) {
+            //	Boolean setIfAbsent(K key, V value, long timeout, TimeUnit unit);
+            for(int i=0;i<mutexKeyRetryTimes;i++){
+                try{
+                    if (redisTemplate.opsForValue().setIfAbsent(mutexKey,mutexValue,timeout,timeUnit)) {
+                        result = redisCallback.doCallback(key);
+                        del(mutexKey);
+                        return result;
+                    } else {
+                        try {
+                            Thread.sleep(80);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        value = (String) get(key);
+
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        if(value!=null){
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+            try {
+                result = (V) mapper.readValue(value,clazz);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+    public V getWithMutexKey(String key, String mutexKey, String mutexValue, RedisCallback<String,V> redisCallback,Class<V> clazz){
+        return getWithMutexKey(key,mutexKey,mutexValue,8000,TimeUnit.MILLISECONDS,redisCallback,clazz);
+    }
     /**
      * 指定缓存失效时间
      * @param key 键

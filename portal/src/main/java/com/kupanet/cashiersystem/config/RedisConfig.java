@@ -53,8 +53,8 @@ public class RedisConfig {
         return template;
     }
     @Bean
-    public RedisTemplatePlus<String, Object> redisTemplatePlus(RedisConnectionFactory factory) {
-        RedisTemplatePlus<String, Object> template = new RedisTemplatePlus<>(this.host,this.port);
+    public<T> RedisTemplatePlus<String, T> redisTemplatePlus(RedisConnectionFactory factory) {
+        RedisTemplatePlus<String, T> template = new RedisTemplatePlus<>(this.host,this.port);
         template.setConnectionFactory(factory);
         RedisSerializer<String> stringSerializer = new StringRedisSerializer();
         template.setKeySerializer(stringSerializer);

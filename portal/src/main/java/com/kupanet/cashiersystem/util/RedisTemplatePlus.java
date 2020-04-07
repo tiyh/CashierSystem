@@ -23,8 +23,6 @@ public class RedisTemplatePlus<K, V>  extends RedisTemplate<K, V>  {
     }
     public boolean existsBloom(String name, String value) {
         if(client==null||name==null||value==null) return false;
-        return existsBloom(name, value);
+        return client.exists(name, value);
     }
-
-
 }

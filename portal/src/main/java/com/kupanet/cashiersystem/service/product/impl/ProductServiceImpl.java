@@ -48,7 +48,8 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductMapper productMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisUtil<Product> redisUtil;
+
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
@@ -116,23 +117,39 @@ public class ProductServiceImpl implements ProductService {
             return null;
         }
         Product product;
-        if((product= (Product) redisUtil.get(CanalProductEventConsumer.generateRedisKey(String.valueOf(id))))
-                !=null){
+        if((product=
+                redisUtil.getWithMutexKey(
+                        CanalProductEventConsumer.generateRedisKey(String.valueOf(id)),
+                        generateRedisMutexKey(id),
+                        "1",
+                        new RedisUtil.RedisCallback<String,Product>(){
+
+                            @Override
+                            public Product doCallback(String k) {
+                                return getByIdFromDatabase(id);
+                            }
+                        },Product.class)
+            ) != null){
             return product;
         }else {
-            product = productMapper.selectById(id);
-            FlatMessage flatMessage = new CanalUtil<Product>().convertFlatMessageFromObject(product);
-            if(flatMessage!=null&&flatMessage.getData()!=null){
-                rocketMQTemplate.asyncSend(canalDatabaseTopic, flatMessage, new SendCallback() {
-                    @Override
-                    public void onSuccess(SendResult sendResult) {
-                    }
-                    @Override
-                    public void onException(Throwable throwable) {
-                        logger.error("send delete redis topic fail; {}", throwable.getMessage());
-                    }
-                });
-            }
+            product = getByIdFromDatabase(id);
+        }
+        return product;
+    }
+    private Product getByIdFromDatabase(Serializable id){
+        Product product = productMapper.selectById(id);
+        if(product==null) return null;
+        FlatMessage flatMessage = new CanalUtil<Product>().convertFlatMessageFromObject(product);
+        if(flatMessage!=null&&flatMessage.getData()!=null){
+            rocketMQTemplate.asyncSend(canalDatabaseTopic, flatMessage, new SendCallback() {
+                @Override
+                public void onSuccess(SendResult sendResult) {
+                }
+                @Override
+                public void onException(Throwable throwable) {
+                    logger.error("send delete redis topic fail; {}", throwable.getMessage());
+                }
+            });
         }
         return product;
     }
@@ -186,6 +203,9 @@ public class ProductServiceImpl implements ProductService {
     public IPage<Product> page(IPage<Product> page, Wrapper<Product> queryWrapper) {
         queryWrapper = (Wrapper<Product>) SqlHelper.fillWrapper(page, queryWrapper);
         return productMapper.selectPage(page, queryWrapper);
+    }
+    private String generateRedisMutexKey(Serializable id){
+        return RedisConstant.PRODUCT_TABLE_NAME+"_mutex_"+id;
     }
 
 }
