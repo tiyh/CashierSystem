@@ -7,6 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kupanet.cashiersystem.util.JwtTokenUtil;
 import com.kupanet.cashiersystem.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisUtil<UserDetails> redisUtil;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -47,7 +48,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             logger.info("checking authentication " + username);
             
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            	UserDetails userDetails = (UserDetails) redisUtil.get(authToken);
+                ObjectMapper mapper = new ObjectMapper();
+                UserDetails userDetails = redisUtil.get(authToken,UserDetails.class);
+
             	if(userDetails==null){
             		userDetails = userDetailsService.loadUserByUsername(username);
             	}

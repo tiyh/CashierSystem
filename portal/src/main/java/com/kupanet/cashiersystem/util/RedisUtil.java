@@ -128,7 +128,16 @@ public class RedisUtil<V> {
     public Object get(String key){
         return key==null?null:redisTemplate.opsForValue().get(key);
     }
-
+    public V get(String key,Class<V> tClass){
+        ObjectMapper mapper = new ObjectMapper();
+        V result =null;
+        try {
+            result = mapper.readValue( (String) get(key),tClass);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
     /**
      * 普通缓存放入
      * @param key 键
