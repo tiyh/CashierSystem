@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.kupanet.cashiersystem.constant.RedisConstant;
 import com.kupanet.cashiersystem.constant.SQLType;
-import com.kupanet.cashiersystem.model.BloomRetryEvent;
 import com.kupanet.cashiersystem.model.RedisRetryEvent;
 import com.kupanet.cashiersystem.util.RedisUtil;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -35,6 +34,8 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     protected RocketMQTemplate rocketMQTemplate;
     //messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
     protected final static int DELAY_LEVEL = 1;
+    protected final static int CACHE_EXPIRED_BASE_TIME = 120;
+    protected final static int CACHE_EXPIRED_RANDOM_TIME_LIMIT = 60;
 
     public final static ObjectMapper mapper = new ObjectMapper();
     static {
@@ -102,7 +103,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
     }
     protected void redisInsert( Map<String,T> columns){
         Random r = new Random();
-        int randomInt = 120+r.nextInt(60);
+        int randomInt = CACHE_EXPIRED_BASE_TIME+r.nextInt(CACHE_EXPIRED_RANDOM_TIME_LIMIT);
         for (Map.Entry<String,T> column : columns.entrySet()) {
             LOGGER.info("redisInsert getWrapRedisKey:{},column:{}",getWrapRedisKey(column.getValue()),column.getKey());
             redisUtil.set(getWrapRedisKey(column.getValue()),column.getKey(),randomInt);
@@ -112,7 +113,7 @@ public abstract class AbstractCanalDatabaseEventConsumer<T> {
                         .value(String.valueOf(getIdValue(column.getValue())))
                         .commandType(RedisConstant.CommandType.BlOOM_ADD)
                         .build();
-                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(new BloomRetryEvent(getModelName(),String.valueOf(getIdValue(column.getValue())))).build(), new SendCallback() {
+                rocketMQTemplate.asyncSend(redisRetryTopic, MessageBuilder.withPayload(rre).build(), new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
                     }

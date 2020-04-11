@@ -141,7 +141,7 @@ public class ProductServiceImpl implements ProductService {
         if(product==null) return null;
         FlatMessage flatMessage = new CanalUtil<Product>().convertFlatMessageFromObject(product);
         if(flatMessage!=null&&flatMessage.getData()!=null){
-            rocketMQTemplate.asyncSend(canalDatabaseTopic, flatMessage, new SendCallback() {
+            rocketMQTemplate.asyncSendOrderly(canalDatabaseTopic, MessageBuilder.withPayload(flatMessage).build(),CanalProductEventConsumer.generateRedisKey(String.valueOf(id)),new SendCallback() {
                 @Override
                 public void onSuccess(SendResult sendResult) {
                 }

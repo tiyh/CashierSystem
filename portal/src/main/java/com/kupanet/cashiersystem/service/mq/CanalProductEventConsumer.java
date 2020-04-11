@@ -40,13 +40,13 @@ import java.util.Random;
             return String.valueOf(product.getId());
         }
         public static String generateRedisKey(String id){
-            return RedisConstant.PRODUCT_TABLE_NAME +
-                    "_" + id;
+            return RedisConstant.DATABASE_NAME+"."+RedisConstant.PRODUCT_TABLE_NAME +
+                    ":" + id;
         }
 
         public static String generateRedisCategoryKey(Long categoryId){
-            return RedisConstant.PRODUCT_TABLE_NAME +
-                    "_category_" + categoryId;
+            return  RedisConstant.DATABASE_NAME+"."+RedisConstant.PRODUCT_TABLE_NAME +
+                    ".category:" + categoryId;
         }
         protected String getWrapRedisKey(Product product) {
             return generateRedisKey(getIdValue(product));
@@ -55,7 +55,7 @@ import java.util.Random;
         @Override
         protected void redisInsert( Map<String,Product> columns){
             Random r = new Random();
-            int randomInt = 120+r.nextInt(60);
+            int randomInt = CACHE_EXPIRED_BASE_TIME+r.nextInt(CACHE_EXPIRED_RANDOM_TIME_LIMIT);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
                 Product product = column.getValue();
                 if(product==null){
@@ -92,7 +92,7 @@ import java.util.Random;
         @Override
         protected void redisUpdate( Map<String,Product> columns,Map<String,Product> old){
             Random r = new Random();
-            int randomInt = 120+r.nextInt(60);
+            int randomInt = CACHE_EXPIRED_BASE_TIME+r.nextInt(CACHE_EXPIRED_RANDOM_TIME_LIMIT);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
                 Product newProduct = column.getValue();
                 if(newProduct==null){
