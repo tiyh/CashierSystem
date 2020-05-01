@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kupanet.cashiersystem.model.Member;
 import com.kupanet.cashiersystem.util.CommonResult;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 public interface MemberService extends IService<Member> {
@@ -44,5 +45,7 @@ public interface MemberService extends IService<Member> {
 
     Object register(Member umsMember);
     boolean logout(String oldToken);
+    Long getMemberIdFromRequest(HttpServletRequest request);
+
 
 }

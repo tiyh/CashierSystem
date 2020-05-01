@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisUtil<Member> redisUtil;
     private static final Logger LOGGER = LoggerFactory.getLogger(MemberServiceImpl.class);
 
     @Autowired
@@ -52,6 +53,9 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
     private Long AUTH_CODE_EXPIRE_SECONDS;
     @Value("${jwt.tokenHead}")
     private String tokenHead;
+    @Value("${jwt.header}")
+    private String jwtHeader;
+
 
 
     @Override
@@ -198,6 +202,23 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member>
             return redisUtil.del(token);
         }
         return false;
+    }
+
+    public Long getMemberIdFromRequest(HttpServletRequest request){
+        String authHeader = request.getHeader(this.jwtHeader);
+        Long result = -1L;
+        if (authHeader != null && authHeader.startsWith(tokenHead)) {
+            final String authToken = authHeader.substring(tokenHead.length()); // The part after "Bearer "
+            String username = jwtTokenUtil.getUsernameFromToken(authToken);
+            if (username != null) {
+                Member member = redisUtil.get(authToken, Member.class);
+                if(member==null){
+                    member = getByUsername(username);
+                }
+                if(member!=null) result = member.getId();
+            }
+        }
+        return result;
     }
 
 }

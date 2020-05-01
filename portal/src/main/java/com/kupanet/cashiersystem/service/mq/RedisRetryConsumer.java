@@ -7,7 +7,9 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 @RocketMQMessageListener(topic = "${cashier.rocketmq.redis.retryTopic}", consumerGroup = "redis-retry-consumer")
 public class RedisRetryConsumer implements RocketMQListener<RedisRetryEvent> {
     private static Logger LOGGER = LoggerFactory.getLogger(RedisRetryConsumer.class);
