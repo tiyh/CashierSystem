@@ -27,6 +27,8 @@ spec:
             value: "zk-0.zk-hs.default.svc.cluster.local"
           - name: ZK_PORT
             value: "2181"
+          - name: LOCAL_PROP_PATH
+            value: "/tmp"
         ports:
         - containerPort: 8031
         resources: {}

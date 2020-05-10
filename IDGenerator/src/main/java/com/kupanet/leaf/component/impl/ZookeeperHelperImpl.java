@@ -33,7 +33,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
     private String listenAddress = null;//保存自身的key ip:port
     private int workerID;
     private static final String PREFIX_ZK_PATH = "/snowflake/leaf";
-    private static final String PROP_PATH = System.getProperty("java.io.tmpdir") + File.separator +  "leaf/leafconf/{port}/workerID.properties";
+    private static String propPath;
     private static final String PATH_FOREVER = PREFIX_ZK_PATH + "/forever";//保存所有数据持久的节点
     private String ip;
 
@@ -47,6 +47,9 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
     public boolean init() {
         this.port=System.getenv("ZK_PORT");
         this.connectionString=System.getenv("ZK_ADDRESS");
+        String tempPath = System.getenv("LOCAL_PROP_PATH");
+        String path = (tempPath==null||tempPath.isEmpty())?System.getProperty("java.io.tmpdir"):tempPath;
+        this.propPath = path+"/leaf/leafconf/"+port+"/workerID.properties";
         this.ip = NetUtils.getIp();
         this.listenAddress = ip + ":" + port;
 
@@ -58,7 +61,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                 //不存在根节点,机器第一次启动,创建/snowflake/ip:port-000000000,并上传数据
                 zk_AddressNode = createNode(curator);
                 //worker id 默认是0
-                //updateLocalWorkerID(workerID);
+                updateLocalWorkerID(workerID);
                 //定时上报本机时间给forever节点
                 ScheduledUploadData(curator, zk_AddressNode);
                 return true;
@@ -82,7 +85,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                     }
                     //准备创建临时节点
                     doService(curator);
-                    //updateLocalWorkerID(workerID);
+                    updateLocalWorkerID(workerID);
                     LOGGER.info("[Old NODE]find forever node have this endpoint ip-{} port-{} workid-{} childnode and start SUCCESS", ip, port, workerID);
                 } else {
                     //表示新启动的节点,创建持久节点 ,不用check时间
@@ -91,22 +94,21 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
                     String[] nodeKey = newNode.split("-");
                     workerID = Integer.parseInt(nodeKey[1]);
                     doService(curator);
-                    //updateLocalWorkerID(workerID);
+                    updateLocalWorkerID(workerID);
                     LOGGER.info("[New NODE]can not find node on forever node that endpoint ip-{} port-{} workid-{},create own node on forever node and start SUCCESS ", ip, port, workerID);
                 }
             }
         } catch (Exception e) {
             LOGGER.error("Start node ERROR {}", e);
-            /*try {
+            try {
                 Properties properties = new Properties();
-                properties.load(new FileInputStream(new File(PROP_PATH.replace("{port}", port + ""))));
+                properties.load(new FileInputStream(new File(this.propPath)));
                 workerID = Integer.valueOf(properties.getProperty("workerID"));
                 LOGGER.warn("START FAILED ,use local node file properties workerID-{}", workerID);
             } catch (Exception e1) {
                 LOGGER.error("Read file error ", e1);
                 return false;
-            }*/
-            return false;
+            }
         }
         return true;
     }
@@ -191,7 +193,7 @@ public class ZookeeperHelperImpl implements ZookeeperHelper {
      * @param workerID
      */
     private void updateLocalWorkerID(int workerID) {
-        File leafConfFile = new File(PROP_PATH.replace("{port}", port));
+        File leafConfFile = new File(this.propPath);
         boolean exists = leafConfFile.exists();
         LOGGER.info("file exists status is {}", exists);
         if (exists) {
