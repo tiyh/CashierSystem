@@ -28,8 +28,15 @@
   ```
 - zookeeper
 - mysql
-- canal
-  ```
-	./bin/startup.sh
-  ```
-- redis
+- canal  
+	./canal.deployer-1.1.4/bin/startup.sh  
+ 	[conf file](https://github.com/tiyh/CashierSystem/tree/master/conf/canal)
+- redis  
+	1. [RedisBloom](https://github.com/RedisBloom/RedisBloom)
+	```
+	make
+	chown redis:redis redisbloom.so  
+	redis-server --loadmodule /path/to/redisbloom.so  
+	//redis-server /etc/redis/redis.conf  
+	//loadmodule /path/to/redisbloom.so
+	```
