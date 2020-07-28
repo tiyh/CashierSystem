@@ -1,6 +1,7 @@
 package com.kupanet.cashiersystem.service.mq;
 
 import com.alibaba.otter.canal.protocol.FlatMessage;
+import com.kupanet.cashiersystem.DAO.ProductMapper;
 import com.kupanet.cashiersystem.constant.RedisConstant;
 import com.kupanet.cashiersystem.model.Product;
 import com.kupanet.cashiersystem.model.RedisRetryEvent;
@@ -11,6 +12,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ import java.util.Random;
             consumerGroup = "canal-database-consumer",consumeMode = ConsumeMode.ORDERLY)
     public class CanalProductEventConsumer extends AbstractCanalDatabaseEventConsumer<Product> implements RocketMQListener<FlatMessage> {
         private static Logger LOGGER = LoggerFactory.getLogger(com.kupanet.cashiersystem.service.mq.CanalProductEventConsumer.class);
+
+        @Autowired
+        private ProductMapper productMapper;
 
         @Override
         public void onMessage(FlatMessage flatMessage) {
@@ -57,7 +62,11 @@ import java.util.Random;
             Random r = new Random();
             int randomInt = CACHE_EXPIRED_BASE_TIME+r.nextInt(CACHE_EXPIRED_RANDOM_TIME_LIMIT);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
-                Product product = column.getValue();
+                if(column.getValue()==null){
+                    LOGGER.warn("redisInsert column.getValue() is null,columns:"+columns.toString());
+                    return;
+                }
+                Product product = productMapper.selectById(column.getValue().getId());
                 if(product==null){
                     LOGGER.warn("redisInsert product is null,columns:"+columns.toString());
                     return;
@@ -94,7 +103,11 @@ import java.util.Random;
             Random r = new Random();
             int randomInt = CACHE_EXPIRED_BASE_TIME+r.nextInt(CACHE_EXPIRED_RANDOM_TIME_LIMIT);
             for (Map.Entry<String,Product> column : columns.entrySet()) {
-                Product newProduct = column.getValue();
+                if(column.getValue()==null){
+                    LOGGER.warn("redisInsert column.getValue() is null,columns:"+columns.toString());
+                    return;
+                }
+                Product newProduct = productMapper.selectById(column.getValue().getId());
                 if(newProduct==null){
                     LOGGER.warn("redisUpdate newProduct is null,columns:"+columns.toString());
                     return;
