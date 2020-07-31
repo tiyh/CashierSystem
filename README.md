@@ -15,6 +15,9 @@
 - [ ] Elasticsearch搜索系统
 - [ ] Flink数据处理
 
+## design
+![](https://github.com/tiyh/CashierSystemdocs/image/CashierSystem_design.png)
+
 
 ## 环境搭建
 
