@@ -16,7 +16,7 @@
 - [ ] Flink数据处理
 
 ## design
-![](https://github.com/tiyh/CashierSystemdocs/image/CashierSystem_design.png)
+![架构图](https://raw.githubusercontent.com/tiyh/CashierSystem/master/docs/image/CashierSystem_design.png)
 
 
 ## 环境搭建
