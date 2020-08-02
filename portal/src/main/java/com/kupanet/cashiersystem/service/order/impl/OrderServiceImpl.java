@@ -17,6 +17,7 @@ import com.kupanet.cashiersystem.service.product.ProductService;
 import com.kupanet.cashiersystem.util.CommonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -71,6 +72,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
 
     @Override
+    @Transactional
     public int close(List<Long> ids, String note) {
         Order record = new Order();
         record.setStatus(PayConstant.PayStatus.FAILED.getInt());
@@ -94,6 +96,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     @Override
+    @Transactional
     public int updateNote(Long id, String note, Integer status) {
         Order order = new Order();
         order.setId(id);
@@ -127,6 +130,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         save(order);
         return orderSn;
     }
+
+    @Transactional
     public CommonResult createOrderFromCart(String cartIds,int payType,String notifyUrl,boolean all) {
         String orderSn = idGeneratorService.getId();
         Long orderId =  Long.parseLong(orderSn);
