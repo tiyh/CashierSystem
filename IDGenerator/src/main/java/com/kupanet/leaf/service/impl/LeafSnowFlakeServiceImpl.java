@@ -22,9 +22,9 @@ public class LeafSnowFlakeServiceImpl implements LeafSnowFlakeService {
     private final long workerIdShift = sequenceBits;
     private final long timestampLeftShift = sequenceBits + workerIdBits;
     private final long sequenceMask = ~(-1L << sequenceBits);
-    private long workerId;
-    private long sequence = 0L;
-    private long lastTimestamp = -1L;
+    private static volatile long workerId;
+    private volatile long sequence = 0L;
+    private volatile long lastTimestamp = -1L;
     private static final Random RANDOM = new Random();
     //private volatile AtomicBoolean initFlag = new AtomicBoolean(false);
 
@@ -49,7 +49,7 @@ public class LeafSnowFlakeServiceImpl implements LeafSnowFlakeService {
         }
     }
     @Override
-    public Long getId() {
+    public synchronized Long getId() {
         //init();
         long timestamp = timeGen();
         if (timestamp < lastTimestamp) {
